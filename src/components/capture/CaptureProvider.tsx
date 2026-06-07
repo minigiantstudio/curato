@@ -71,7 +71,7 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
 
   // ── Persist + transition to done ─────────────────────────────
   async function persistAndDone(ctx?: ContextData) {
-    const { type, content, ruleVerb, ruleDomain, verdict } = flowData.current
+    const { type, content, ruleVerb, verdict } = flowData.current
 
     // Ensure anon session exists (best-effort; saveCapture handles offline)
     try { await getOrCreateAnonSession() } catch { /* offline — queue will handle */ }
