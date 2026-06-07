@@ -2,10 +2,15 @@
 
 Art Director capture and taste synthesis tool. See TASTE_PHASES.md for architecture.
 
-## Current phase
-Phase 0 — Foundation
-Branch: phase/0-foundation
-Only work on items listed under Phase 0 in TASTE_PHASES.md unless asked otherwise.
+## Current Phase
+Phase 1 (Capture-First Flow) — COMPLETE
+
+All capture flow components built:
+- TypeSheet, CaptureScreen, ContextStep, DoneScreen, CaptureProvider
+- FAB, FeedCard, FeedScreen
+- OnlineFlush (reconnect queue flushing)
+- (app) route group layout with CaptureProvider
+- Root redirect → /feed
 
 ## Core rules
 - Capture is always available — FAB is persistent across all screens

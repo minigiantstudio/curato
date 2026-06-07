@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { DM_Mono } from 'next/font/google'
 import './globals.css'
+import { OnlineFlush } from '@/components/OnlineFlush'
 
 const dmMono = DM_Mono({
   subsets: ['latin'],
@@ -23,6 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         `}</style>
       </head>
       <body style={{ fontFamily: 'var(--mono)', background: 'var(--cream)', color: 'var(--ink)' }}>
+        <OnlineFlush />
         {children}
       </body>
     </html>
