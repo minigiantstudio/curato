@@ -49,8 +49,9 @@ export default function FeedPage() {
     }
   }
 
-  const handleDismissSuggestion = async (_captureId: string, _type: 'tag' | 'domain' | 'context', _value: string) => {
-    // Future: implement dismiss (remove from ai_* arrays without accepting)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleDismissSuggestion = async (_captureId: string, _type: 'tag' | 'domain' | 'context', _value: string): Promise<void> => {
+    // TODO: implement dismiss (remove from ai_* arrays without accepting)
   }
 
   const handleAcceptAll = async () => {
