@@ -5,8 +5,9 @@ import { FeedCard } from '@/components/feed/FeedCard'
 import { AgentTriageStrip } from '@/components/feed/AgentTriageStrip'
 import { getTodayCaptures, subscribeToTodayCaptures, acceptAgentSuggestion, acceptAllSuggestions } from '@/lib/captures'
 import { getContexts } from '@/lib/contexts'
+import { AssignContextSheet } from '@/components/contexts/AssignContextSheet'
 import type { Capture } from '@/types/capture'
-import type { Context } from '@/lib/contexts'
+import type { Context } from '@/types/context'
 
 function todayLabel(): string {
   return new Date().toLocaleDateString('en-US', {
@@ -21,6 +22,7 @@ export default function FeedPage() {
   const [contexts, setContexts] = useState<Context[]>([])
   const [loading, setLoading] = useState(true)
   const [suggestionLoading, setSuggestionLoading] = useState(false)
+  const [assignCapture, setAssignCapture] = useState<Capture | null>(null)
 
   useEffect(() => {
     getTodayCaptures().then(setCaptures).finally(() => setLoading(false))
@@ -52,6 +54,16 @@ export default function FeedPage() {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleDismissSuggestion = async (_captureId: string, _type: 'tag' | 'domain' | 'context', _value: string): Promise<void> => {
     // TODO: implement dismiss (remove from ai_* arrays without accepting)
+  }
+
+  function handleLongPress(capture: Capture) {
+    setAssignCapture(capture)
+  }
+
+  function handleAssignSaved(captureId: string, contextIds: string[]) {
+    setCaptures(prev =>
+      prev.map(c => (c.id === captureId ? { ...c, context_ids: contextIds } : c))
+    )
   }
 
   const handleAcceptAll = async () => {
@@ -145,10 +157,22 @@ export default function FeedPage() {
         )}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {captures.map(c => (
-            <FeedCard key={c.id} capture={c} contexts={contexts} onEditContext={() => {}} />
+            <FeedCard
+                key={c.id}
+                capture={c}
+                contexts={contexts}
+                onEditContext={() => setAssignCapture(c)}
+                onLongPress={handleLongPress}
+              />
           ))}
         </div>
       </div>
+      <AssignContextSheet
+        open={assignCapture !== null}
+        capture={assignCapture}
+        onClose={() => setAssignCapture(null)}
+        onSaved={handleAssignSaved}
+      />
     </div>
   )
 }
