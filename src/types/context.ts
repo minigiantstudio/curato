@@ -15,4 +15,5 @@ export interface ContextInsert {
   name: string
   description?: string
   parent_context_id?: string | null
+  cover_capture_id?: string | null
 }
