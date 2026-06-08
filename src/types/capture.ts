@@ -68,3 +68,4 @@ export const DOMAINS = ['Spatial','Type','Color','Garments','Objects','Sound','P
 export const RULE_VERBS: RuleVerb[] = ['ALWAYS','NEVER','PREFER','AVOID']
 export const TAG_SUGGESTIONS = ['restraint','light','material','asymmetry','warmth','patina','negative-space']
 export const FEELING_MOODS = ['drawn-in','unsettled','curious','indifferent','repelled']
+export const PROJECTS = ['Editorial','Spatial','Identity','Product','Motion','Print','Personal'] as const
