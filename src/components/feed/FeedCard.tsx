@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { CAPTURE_TYPES, type CaptureType } from '@/types/capture'
 import type { Capture } from '@/types/capture'
 import type { Context } from '@/lib/contexts'
@@ -20,6 +20,7 @@ interface FeedCardProps {
   capture: Capture
   contexts?: Context[]
   onEditContext?: (captureId: string) => void
+  onLongPress?: (capture: Capture) => void
 }
 
 function formatTime(date: string): string {
@@ -36,8 +37,44 @@ function formatTime(date: string): string {
   return `${days}d ago`
 }
 
-export function FeedCard({ capture, contexts = [], onEditContext }: FeedCardProps) {
+export function FeedCard({ capture, contexts = [], onEditContext, onLongPress }: FeedCardProps) {
   const [expanded, setExpanded] = useState(false)
+  const [pressing, setPressing] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const startPosRef = useRef<{ x: number; y: number } | null>(null)
+
+  function cancelTimer() {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
+    setPressing(false)
+  }
+
+  function handlePointerDown(e: React.PointerEvent) {
+    if (!onLongPress) return
+    startPosRef.current = { x: e.clientX, y: e.clientY }
+    setPressing(true)
+    timerRef.current = setTimeout(() => {
+      setPressing(false)
+      onLongPress(capture)
+    }, 600)
+  }
+
+  function handlePointerMove(e: React.PointerEvent) {
+    if (!startPosRef.current || !timerRef.current) return
+    const dx = Math.abs(e.clientX - startPosRef.current.x)
+    const dy = Math.abs(e.clientY - startPosRef.current.y)
+    if (dx > 10 || dy > 10) cancelTimer()
+  }
+
+  function handlePointerUp() {
+    cancelTimer()
+  }
+
+  function handleClick() {
+    setExpanded(e => !e)
+  }
   const typeInfo = CAPTURE_TYPES.find(t => t.id === capture.type)
   const verdictColor =
     capture.verdict === 'keep' ? 'var(--green)' : capture.verdict === 'reject' ? 'var(--red)' : null
@@ -46,14 +83,19 @@ export function FeedCard({ capture, contexts = [], onEditContext }: FeedCardProp
 
   return (
     <div
-      onClick={() => setExpanded(!expanded)}
+      onClick={handleClick}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerLeave={handlePointerUp}
       style={{
         background: expanded ? 'var(--cream-2)' : 'var(--cream)',
         borderRadius: 12,
-        border: `1.5px solid ${expanded ? 'var(--line)' : 'var(--line-soft)'}`,
+        border: `1.5px solid ${pressing ? 'var(--violet)' : expanded ? 'var(--line)' : 'var(--line-soft)'}`,
         padding: '14px',
         cursor: 'pointer',
         transition: 'all .2s',
+        userSelect: 'none',
       }}
     >
       {/* Header row */}
@@ -212,6 +254,21 @@ export function FeedCard({ capture, contexts = [], onEditContext }: FeedCardProp
         >
           Edit context
         </button>
+      )}
+
+      {pressing && onLongPress && (
+        <div style={{
+          marginTop: 8,
+          padding: '6px 10px',
+          background: 'rgba(74,61,176,0.07)',
+          border: '1px solid rgba(74,61,176,0.15)',
+          borderRadius: 6,
+          textAlign: 'center',
+          fontSize: 10,
+          color: 'var(--violet)',
+        }}>
+          Hold to assign context…
+        </div>
       )}
     </div>
   )
