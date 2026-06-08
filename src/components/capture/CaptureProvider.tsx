@@ -8,6 +8,7 @@ import { ContextStep, type ContextData } from './ContextStep'
 import { DoneScreen, type SavedEntry } from './DoneScreen'
 import { saveCapture, flushOfflineQueue } from '@/lib/captures'
 import { getOrCreateAnonSession } from '@/lib/auth'
+import { triggerAgent } from '@/lib/agent'
 import type { CaptureType, Verdict, RuleVerb, CaptureInsert } from '@/types/capture'
 
 // ── State machine ─────────────────────────────────────────────
@@ -76,7 +77,8 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
     const { type, content, ruleVerb, verdict } = flowData.current
 
     // Ensure anon session exists (best-effort; saveCapture handles offline)
-    try { await getOrCreateAnonSession() } catch { /* offline — queue will handle */ }
+    let session = null
+    try { session = await getOrCreateAnonSession() } catch { /* offline — queue will handle */ }
     await flushOfflineQueue()
 
     const insert: CaptureInsert = {
@@ -89,7 +91,10 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
       context_ids: [],
     }
 
-    await saveCapture(insert)
+    const saved = await saveCapture(insert)
+    if (saved && session?.user?.id) {
+      void triggerAgent(saved.id, session.user.id)
+    }
     setSavedEntry({ type: type!, content: content ?? '', verdict: verdict ?? null, domain: ctx?.domain ?? '', tags: ctx?.tags ?? [] })
     setStep('done')
   }
