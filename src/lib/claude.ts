@@ -1,3 +1,6 @@
+import type { AgentResponse } from '@/types/agent'
+import type { CaptureType } from '@/types/capture'
+
 const CLAUDE_API_KEY = process.env.ANTHROPIC_API_KEY
 const CLAUDE_MODEL = 'claude-sonnet-4-6'
 
@@ -20,9 +23,10 @@ async function callClaude(messages: ClaudeMessage[]): Promise<string> {
     },
     body: JSON.stringify({
       model: CLAUDE_MODEL,
-      max_tokens: 500,
+      max_tokens: 1000,
       messages,
     }),
+    signal: AbortSignal.timeout(15_000),
   })
 
   if (!response.ok) {
@@ -37,14 +41,14 @@ async function callClaude(messages: ClaudeMessage[]): Promise<string> {
 }
 
 export async function analyzeCapture(
-  captureType: string,
+  captureType: CaptureType,
   content: string,
   existingTags: string[],
   existingContexts: Array<{ id: string; name: string; type: string; description: string }>
-): Promise<string> {
+): Promise<AgentResponse> {
   const tagsList = existingTags.slice(0, 30).join(', ')
   const contextsList = existingContexts
-    .map(c => `${c.name} (${c.type}): ${c.description}`)
+    .map(c => `${c.name} (${c.type}): ${(c.description ?? '').slice(0, 200)}`)
     .join('\n')
 
   const prompt = `You are the organization agent for Taste, an Art Director's aesthetic capture system.
@@ -62,16 +66,20 @@ Return ONLY a JSON object (no markdown, no explanation):
   "suggested_tags": ["tag1", "tag2"],
   "suggested_domains": ["domain1"],
   "suggested_context_ids": ["context-id-1"],
-  "extracted_rule": { "verb": "ALWAYS", "text": "constraint statement" } or null
+  "extracted_rule": null
 }
 
 Rules for suggestions:
 - Tags: 2-5 tags, prefer existing ones if they fit the content
 - Domains: from this list only: Spatial, Type, Color, Garments, Objects, Sound, Print
 - Contexts: only include if the content clearly belongs to a brand/project
-- Rule: only if the content contains a constraint statement (e.g., "Always use serif fonts")
+- Set extracted_rule to a {"verb": "ALWAYS|NEVER|PREFER|AVOID", "text": "..."} object only when the content contains a hard constraint; otherwise null
 - Return valid JSON only`
 
   const response = await callClaude([{ role: 'user', content: prompt }])
-  return response
+  try {
+    return JSON.parse(response) as AgentResponse
+  } catch {
+    throw new Error(`Failed to parse Claude response as JSON: ${response}`)
+  }
 }
