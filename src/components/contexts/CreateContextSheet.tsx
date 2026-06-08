@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Sheet } from '@/components/ui/Sheet'
 import { createContext as createTasteContext } from '@/lib/contexts'
 import type { Context } from '@/types/context'
@@ -28,6 +28,18 @@ export function CreateContextSheet({
   const [parentOpen, setParentOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (open) {
+      setType(defaultType)
+      setName('')
+      setDescription('')
+      setParentId(null)
+      setParentQuery('')
+      setParentOpen(false)
+      setError('')
+    }
+  }, [open, defaultType])
 
   async function handleSave() {
     if (!name.trim()) {
@@ -103,7 +115,12 @@ export function CreateContextSheet({
             {(['brand', 'project'] as const).map(t => (
               <button
                 key={t}
-                onClick={() => setType(t)}
+                onClick={() => {
+                  setType(t)
+                  setParentId(null)
+                  setParentQuery('')
+                  setParentOpen(false)
+                }}
                 style={{
                   flex: 1,
                   padding: '10px',
@@ -137,6 +154,7 @@ export function CreateContextSheet({
             Name <span style={{ color: 'var(--red)' }}>*</span>
           </label>
           <input
+            autoFocus
             value={name}
             onChange={e => { setName(e.target.value); setError('') }}
             placeholder={type === 'brand' ? 'e.g. PLURAL CAFE' : 'e.g. Poster S/S 2026'}
