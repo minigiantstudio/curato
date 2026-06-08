@@ -21,11 +21,14 @@ export default function ContextsPage() {
   const [defaultType, setDefaultType] = useState<'brand' | 'project'>('brand')
 
   const load = useCallback(async () => {
-    const ctxs = await getContexts()
-    setContexts(ctxs)
-    const c = await getCaptureCounts(ctxs.map(c => c.id))
-    setCounts(c)
-    setLoading(false)
+    try {
+      const ctxs = await getContexts()
+      setContexts(ctxs)
+      const c = await getCaptureCounts(ctxs.map(c => c.id))
+      setCounts(c)
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => { load() }, [load])
