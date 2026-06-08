@@ -3,14 +3,25 @@
 Art Director capture and taste synthesis tool. See TASTE_PHASES.md for architecture.
 
 ## Current Phase
-Phase 1 (Capture-First Flow) — COMPLETE
+Phase 3 (Contexts) — COMPLETE
 
-All capture flow components built:
+Phase 1 (Capture-First Flow) — COMPLETE
+Phase 1 components built:
 - TypeSheet, CaptureScreen, ContextStep, DoneScreen, CaptureProvider
 - FAB, FeedCard, FeedScreen
 - OnlineFlush (reconnect queue flushing)
 - (app) route group layout with CaptureProvider
 - Root redirect → /feed
+
+Phase 3 (Contexts) — COMPLETE
+Phase 3 components built:
+- `src/types/context.ts` — Context and ContextInsert types
+- `src/lib/contexts.ts` — Full data layer (CRUD, inheritance, counts)
+- `src/app/(app)/contexts/page.tsx` — ContextListScreen (brands + projects)
+- `src/components/contexts/CreateContextSheet.tsx` — Creation bottom sheet
+- `src/app/(app)/contexts/[id]/page.tsx` — ContextScreen (Captures/Rules/Capsule tabs)
+- `src/components/contexts/AssignContextSheet.tsx` — Long-press assignment sheet
+- `src/components/feed/FeedCard.tsx` — Added long-press + onLongPress prop
 
 ## Core rules
 - Capture is always available — FAB is persistent across all screens
