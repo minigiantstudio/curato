@@ -1,26 +1,24 @@
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { createClient } from '@/lib/supabase'
 import { analyzeCapture } from '@/lib/claude'
 import type { AgentResponse } from '@/types/agent'
 import type { CaptureType } from '@/types/capture'
 
-export async function triggerAgent(captureId: string): Promise<void> {
+export async function triggerAgent(captureId: string, userId: string): Promise<void> {
   // Fire-and-forget: don't await this, don't block the UI
-  processCapture(captureId).catch(err => {
+  processCapture(captureId, userId).catch(err => {
     console.error(`Agent error for capture ${captureId}:`, err)
   })
 }
 
-async function processCapture(captureId: string): Promise<void> {
-  const supabase = await createServerSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return
+async function processCapture(captureId: string, userId: string): Promise<void> {
+  const supabase = createClient()
 
   // Fetch the capture
   const { data: capture, error: captureError } = await supabase
     .from('captures')
-    .select('*')
+    .select('type, content, ai_processed')
     .eq('id', captureId)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .single()
 
   if (captureError || !capture) {
@@ -28,22 +26,30 @@ async function processCapture(captureId: string): Promise<void> {
     return
   }
 
-  // Fetch existing tags and contexts
+  // Idempotency guard
+  if (capture.ai_processed) return
+
+  // Fetch existing tags (human + AI) from user's captures
   const { data: allCaptures } = await supabase
     .from('captures')
-    .select('tags')
-    .eq('user_id', user.id)
-    .not('tags', 'eq', '{}')
+    .select('tags, ai_tags')
+    .eq('user_id', userId)
     .limit(100)
 
   const existingTags = Array.from(
-    new Set((allCaptures ?? []).flatMap((c: { tags: string[] }) => c.tags ?? []))
+    new Set(
+      (allCaptures ?? []).flatMap((c: { tags: string[]; ai_tags: string[] }) => [
+        ...(c.tags ?? []),
+        ...(c.ai_tags ?? []),
+      ])
+    )
   ).sort()
 
+  // Fetch non-archived contexts
   const { data: contexts } = await supabase
     .from('contexts')
     .select('id, name, description, type')
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .eq('archived', false)
 
   // Call Claude
@@ -51,7 +57,7 @@ async function processCapture(captureId: string): Promise<void> {
   try {
     analysisResult = await analyzeCapture(
       capture.type as CaptureType,
-      capture.content,
+      capture.content as string,
       existingTags,
       contexts ?? []
     )
@@ -70,7 +76,7 @@ async function processCapture(captureId: string): Promise<void> {
       ai_processed: true,
     })
     .eq('id', captureId)
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
 
   if (updateError) {
     console.error('Failed to store agent results:', updateError)
