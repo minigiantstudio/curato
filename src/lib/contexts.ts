@@ -35,9 +35,9 @@ export async function getContextById(id: string): Promise<Context | null> {
  */
 export async function getContextWithParent(
   id: string
-): Promise<{ context: Context; parent: Context | null }> {
+): Promise<{ context: Context | null; parent: Context | null }> {
   const context = await getContextById(id)
-  if (!context) return { context: null as unknown as Context, parent: null }
+  if (!context) return { context: null, parent: null }
 
   let parent: Context | null = null
   if (context.parent_context_id) {
@@ -64,44 +64,54 @@ export async function getCapturesForContext(contextId: string): Promise<Capture[
 /**
  * Traverses the parent chain and returns rule captures from ancestor contexts,
  * each paired with the context they came from.
- * Max depth: 3 (Personal → Brand → Project).
+ * Max depth: 4 (Personal → Brand → Project).
  */
 export async function getInheritedRules(
   contextId: string
 ): Promise<Array<{ rule: Capture; fromContext: Context }>> {
   const supabase = createClient()
-  const result: Array<{ rule: Capture; fromContext: Context }> = []
 
-  // Walk up the parent chain
+  // Step 1: Walk parent chain to collect ancestor contexts
+  const ancestors: Context[] = []
   let currentId: string | null = contextId
-  let depth = 0
   const visited = new Set<string>()
 
-  while (currentId && depth < 4) {
+  while (currentId && ancestors.length < 4) {
     if (visited.has(currentId)) break
     visited.add(currentId)
-
     const ctx = await getContextById(currentId)
     if (!ctx) break
-
-    // Collect rules from this ancestor (skip the context itself — we want inherited only)
+    // Skip the context itself — we only want inherited rules
     if (currentId !== contextId) {
-      const { data: rules } = await supabase
+      ancestors.push(ctx)
+    }
+    currentId = ctx.parent_context_id
+  }
+
+  if (ancestors.length === 0) return []
+
+  // Step 2: Fetch rule captures for all ancestors in parallel
+  const rulesByAncestor = await Promise.all(
+    ancestors.map(async ctx => {
+      const { data: rules, error } = await supabase
         .from('captures')
         .select('*')
         .eq('type', 'rule')
-        .contains('context_ids', [currentId])
+        .contains('context_ids', [ctx.id])
         .order('created_at', { ascending: false })
-
-      for (const rule of rules ?? []) {
-        result.push({ rule: rule as Capture, fromContext: ctx })
+      if (error) {
+        console.error(`getInheritedRules: failed for context ${ctx.id}:`, error)
       }
+      return { ctx, rules: rules ?? [] }
+    })
+  )
+
+  const result: Array<{ rule: Capture; fromContext: Context }> = []
+  for (const { ctx, rules } of rulesByAncestor) {
+    for (const rule of rules) {
+      result.push({ rule: rule as Capture, fromContext: ctx })
     }
-
-    currentId = ctx.parent_context_id
-    depth++
   }
-
   return result
 }
 
@@ -113,6 +123,10 @@ export async function getCaptureCounts(
   contextIds: string[]
 ): Promise<Record<string, number>> {
   if (contextIds.length === 0) return {}
+  if (contextIds.length > 30) {
+    console.warn(`getCaptureCounts: called with ${contextIds.length} IDs, capping at 30`)
+    contextIds = contextIds.slice(0, 30)
+  }
   const supabase = createClient()
   const counts: Record<string, number> = {}
 
@@ -133,7 +147,10 @@ export async function getCaptureCounts(
 export async function createContext(data: ContextInsert): Promise<Context | null> {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
+  if (!user) {
+    console.warn('createContext called without authenticated user')
+    return null
+  }
 
   const { data: created, error } = await supabase
     .from('contexts')
@@ -155,10 +172,15 @@ export async function createContext(data: ContextInsert): Promise<Context | null
 export async function updateContextAssignment(
   captureId: string,
   contextIds: string[]
-): Promise<void> {
+): Promise<boolean> {
   const supabase = createClient()
-  await supabase
+  const { error } = await supabase
     .from('captures')
     .update({ context_ids: contextIds })
     .eq('id', captureId)
+  if (error) {
+    console.error('updateContextAssignment error:', error)
+    return false
+  }
+  return true
 }
