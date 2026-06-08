@@ -62,3 +62,17 @@ export async function getExistingTags(): Promise<string[]> {
   const all = (data as { tags: string[] }[]).flatMap(r => r.tags ?? [])
   return Array.from(new Set(all)).sort()
 }
+
+export async function saveCaptureWithMedia(
+  data: CaptureInsert,
+  mediaFile?: File,
+  mediaFolder: 'photos' | 'audio' = 'photos'
+): Promise<Capture | null> {
+  const { uploadMedia } = await import('@/lib/storage')
+  let mediaUrl: string | undefined
+  if (mediaFile) {
+    const path = await uploadMedia(mediaFile, mediaFolder)
+    if (path) mediaUrl = path
+  }
+  return saveCapture({ ...data, media_url: mediaUrl })
+}
