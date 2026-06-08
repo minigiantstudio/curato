@@ -40,10 +40,12 @@ export function AssignContextSheet({
     if (capture) {
       setSelected([...capture.context_ids])
     }
-  }, [capture])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [capture?.id])
 
   async function toggle(contextId: string) {
-    if (!capture) return
+    if (!capture || saving) return
+    const prev = [...selected]
     const next = selected.includes(contextId)
       ? selected.filter(id => id !== contextId)
       : [...selected, contextId]
@@ -54,6 +56,8 @@ export function AssignContextSheet({
     setSaving(false)
     if (success) {
       onSaved?.(capture.id, next)
+    } else {
+      setSelected(prev)  // rollback optimistic update on failure
     }
   }
 
