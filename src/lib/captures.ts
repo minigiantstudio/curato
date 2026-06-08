@@ -50,3 +50,15 @@ export async function getRecentCaptures(limit = 30): Promise<Capture[]> {
   if (error) return []
   return (data ?? []) as Capture[]
 }
+
+export async function getExistingTags(): Promise<string[]> {
+  const supabase = createClient()
+  const { data } = await supabase
+    .from('captures')
+    .select('tags')
+    .not('tags', 'eq', '{}')
+    .limit(200)
+  if (!data) return []
+  const all = (data as { tags: string[] }[]).flatMap(r => r.tags ?? [])
+  return Array.from(new Set(all)).sort()
+}
