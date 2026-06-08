@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { TypeSheet } from './TypeSheet'
 import { CaptureScreen } from './CaptureScreen'
 import { ContextStep, type ContextData } from './ContextStep'
-import { DoneScreen } from './DoneScreen'
+import { DoneScreen, type SavedEntry } from './DoneScreen'
 import { saveCapture, flushOfflineQueue } from '@/lib/captures'
 import { getOrCreateAnonSession } from '@/lib/auth'
 import type { CaptureType, Verdict, RuleVerb, CaptureInsert } from '@/types/capture'
@@ -36,11 +36,13 @@ export function useCaptureContext() {
 export function CaptureProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const [step, setStep] = useState<FlowStep>('idle')
+  const [savedEntry, setSavedEntry] = useState<SavedEntry | null>(null)
   const flowData = useRef<FlowData>({})
 
   // Exposed to children via context
   const openCapture = useCallback(() => {
     flowData.current = {}
+    setSavedEntry(null)
     setStep('typeSheet')
   }, [])
 
@@ -65,7 +67,7 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
 
   // ── ContextStep → Done ────────────────────────────────────────
   async function onContextDone(ctx: ContextData) {
-    flowData.current.verdict = ctx.verdict ?? flowData.current.verdict
+    flowData.current.verdict = (ctx.verdict === 'pending' ? null : ctx.verdict) as Verdict ?? flowData.current.verdict
     await persistAndDone(ctx)
   }
 
@@ -88,15 +90,20 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
     }
 
     await saveCapture(insert)
+    setSavedEntry({ type: type!, content: content ?? '', verdict: verdict ?? null, domain: ctx?.domain ?? '', tags: ctx?.tags ?? [] })
     setStep('done')
   }
 
-  // ── Done screen dismiss ───────────────────────────────────────
-  function onDismiss() {
-    setStep('idle')
+  // ── Done screen actions ───────────────────────────────────────
+  function onAgain() {
+    flowData.current = {}
+    setSavedEntry(null)
+    setStep('typeSheet')
   }
 
-  function onViewFeed() {
+  function onFeed() {
+    flowData.current = {}
+    setSavedEntry(null)
     setStep('idle')
     router.push('/feed')
   }
@@ -137,16 +144,16 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
           {step === 'context' && (
             <ContextStep
               type={type}
+              content={flowData.current.content ?? ''}
               onBack={() => setStep('capture')}
               onDone={ctx => { void onContextDone(ctx) }}
             />
           )}
-          {step === 'done' && (
+          {step === 'done' && savedEntry && (
             <DoneScreen
-              type={type}
-              verdict={verdict}
-              onDismiss={onDismiss}
-              onViewFeed={onViewFeed}
+              entry={savedEntry}
+              onAgain={onAgain}
+              onFeed={onFeed}
             />
           )}
         </div>
