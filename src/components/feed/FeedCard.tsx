@@ -1,9 +1,20 @@
 'use client'
 
 import { useState } from 'react'
-import { CAPTURE_TYPES } from '@/types/capture'
+import { CAPTURE_TYPES, type CaptureType } from '@/types/capture'
 import type { Capture } from '@/types/capture'
 import type { Context } from '@/lib/contexts'
+import { Ic } from '@/components/icons'
+
+const TYPE_ICONS: Record<CaptureType, React.FC<{ width?: number; height?: number; style?: React.CSSProperties }>> = {
+  photo: Ic.photo,
+  voice: Ic.voice,
+  note: Ic.note,
+  collection: Ic.collection,
+  rule: Ic.rule,
+  feeling: Ic.feeling,
+  reaction: Ic.reaction,
+}
 
 interface FeedCardProps {
   capture: Capture
@@ -13,6 +24,7 @@ interface FeedCardProps {
 
 function formatTime(date: string): string {
   const d = new Date(date)
+  if (isNaN(d.getTime())) return ''
   const now = new Date()
   const diff = now.getTime() - d.getTime()
   const mins = Math.floor(diff / 60000)
@@ -59,7 +71,12 @@ export function FeedCard({ capture, contexts = [], onEditContext }: FeedCardProp
             flexShrink: 0,
           }}
         >
-          <span style={{ fontSize: 14, opacity: 0.8 }}>{typeInfo?.label.charAt(0)}</span>
+          {capture.type in TYPE_ICONS && (
+            (() => {
+              const Icon = TYPE_ICONS[capture.type as CaptureType]
+              return <Icon width={16} height={16} style={{ color: 'var(--ink)' }} />
+            })()
+          )}
         </div>
 
         {/* Label + verdict + time */}
