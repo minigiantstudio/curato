@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { CAPTURE_TYPES, type CaptureType } from '@/types/capture'
 import type { Capture } from '@/types/capture'
 import type { Context } from '@/lib/contexts'
@@ -42,6 +42,13 @@ export function FeedCard({ capture, contexts = [], onEditContext, onLongPress }:
   const [pressing, setPressing] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const startPosRef = useRef<{ x: number; y: number } | null>(null)
+  const longPressDidFireRef = useRef(false)
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
+  }, [])
 
   function cancelTimer() {
     if (timerRef.current) {
@@ -53,9 +60,12 @@ export function FeedCard({ capture, contexts = [], onEditContext, onLongPress }:
 
   function handlePointerDown(e: React.PointerEvent) {
     if (!onLongPress) return
+    longPressDidFireRef.current = false
     startPosRef.current = { x: e.clientX, y: e.clientY }
     setPressing(true)
     timerRef.current = setTimeout(() => {
+      longPressDidFireRef.current = true
+      timerRef.current = null
       setPressing(false)
       onLongPress(capture)
     }, 600)
@@ -73,6 +83,10 @@ export function FeedCard({ capture, contexts = [], onEditContext, onLongPress }:
   }
 
   function handleClick() {
+    if (longPressDidFireRef.current) {
+      longPressDidFireRef.current = false
+      return
+    }
     setExpanded(e => !e)
   }
   const typeInfo = CAPTURE_TYPES.find(t => t.id === capture.type)
