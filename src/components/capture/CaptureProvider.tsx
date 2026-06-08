@@ -110,7 +110,6 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
 
   // ── Render ────────────────────────────────────────────────────
   const type = flowData.current.type
-  const verdict = flowData.current.verdict
 
   return (
     <CaptureContext.Provider value={{ openCapture }}>
