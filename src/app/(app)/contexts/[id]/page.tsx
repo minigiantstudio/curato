@@ -206,7 +206,7 @@ export default function ContextPage({ params }: PageProps) {
           />
         )}
 
-        {activeTab === 'capsule' && <CapsuleTab contextName={context.name} />}
+        {activeTab === 'capsule' && <CapsuleTab contextId={params.id} contextName={context.name} />}
       </div>
     </div>
   )
@@ -345,44 +345,40 @@ function RuleCard({ rule, inherited, inheritedFrom, overridden }: RuleCardProps)
   )
 }
 
-function CapsuleTab({ contextName }: { contextName: string }) {
+function CapsuleTab({ contextId, contextName }: { contextId: string; contextName: string }) {
+  const router = useRouter()
   return (
     <div style={{ paddingTop: 24 }}>
-      <div style={{
-        border: '1.5px dashed var(--line)',
-        borderRadius: 12,
-        padding: '32px 24px',
-        textAlign: 'center',
-      }}>
+      <button
+        onClick={() => router.push(`/capsule/${contextId}`)}
+        style={{
+          display: 'block',
+          width: '100%',
+          padding: '20px 24px',
+          background: 'var(--cream-2)',
+          border: '1.5px solid var(--line)',
+          borderRadius: 12,
+          textAlign: 'left',
+          cursor: 'pointer',
+        }}
+      >
         <p style={{
-          fontFamily: 'var(--display)',
-          fontSize: 18,
-          color: 'var(--ink-soft)',
-          letterSpacing: '-0.01em',
-          marginBottom: 8,
+          fontFamily: 'var(--display)', fontSize: 16, color: 'var(--ink)',
+          letterSpacing: '-0.01em', marginBottom: 6,
         }}>
-          No capsule yet
+          {contextName} Capsule
         </p>
-        <p style={{ fontSize: 12, color: 'var(--ink-faint)', marginBottom: 20, lineHeight: 1.5 }}>
-          A Capsule compiles your captures and rules into a structured taste profile for{' '}
-          <strong>{contextName}</strong>.
+        <p style={{ fontSize: 11, color: 'var(--ink-faint)', lineHeight: 1.5, marginBottom: 0 }}>
+          Generate a taste synthesis — declaration, rules, frequency map.
         </p>
-        <button
-          disabled
-          style={{
-            padding: '12px 24px',
-            background: 'var(--line)',
-            color: 'var(--ink-faint)',
-            border: 'none',
-            borderRadius: 8,
-            fontSize: 12,
-            letterSpacing: '0.04em',
-            cursor: 'not-allowed',
-          }}
-        >
-          Generate Capsule (Phase 5)
-        </button>
-      </div>
+        <span style={{
+          display: 'inline-block', marginTop: 12,
+          fontSize: 10, fontFamily: 'var(--mono)', color: 'var(--violet)',
+          letterSpacing: '0.06em',
+        }}>
+          Open Capsule →
+        </span>
+      </button>
     </div>
   )
 }
