@@ -186,6 +186,7 @@ export async function searchCaptures(
   let q = supabase
     .from('captures')
     .select('*')
+    .eq('archived' as never, false)
     .order('created_at', { ascending: false })
     .range(page * pageSize, (page + 1) * pageSize - 1)
 
@@ -252,6 +253,7 @@ export async function deleteCapture(id: string): Promise<boolean> {
   return true
 }
 
+/** NOTE: Not atomic — returns false if any update fails, but successful updates are already committed. */
 export async function bulkAssignContext(
   captureIds: string[],
   contextId: string
@@ -279,10 +281,12 @@ export async function bulkAssignContext(
   return true
 }
 
+/** NOTE: Not atomic — returns false if any update fails, but successful updates are already committed. */
 export async function bulkAddTags(
   captureIds: string[],
   tags: string[]
 ): Promise<boolean> {
+  if (!tags.length) return true
   const supabase = createClient()
   const { data: rows, error: fetchErr } = await supabase
     .from('captures')
