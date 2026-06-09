@@ -15,7 +15,7 @@ interface Props {
   onExportPDF?: () => void
 }
 
-export function DossierDocument({ capsule, context, parent, theme, isOwner, onThemeToggle, onExportPDF }: Props) {
+export function DossierDocument({ capsule, context, parent, theme, isOwner: _isOwner, onThemeToggle, onExportPDF }: Props) {
   const isDark = theme === 'dark'
 
   const bg = isDark ? '#1A1714' : 'var(--cream)'
@@ -262,7 +262,7 @@ function SectionHead({ label, title, lineColor, inkFaint }: { label: string; tit
   )
 }
 
-function VerbColumn({ verb, rules, lineColor, ink, inkSoft, inkFaint }: {
+function VerbColumn({ verb, rules, lineColor, ink: _ink, inkSoft, inkFaint }: {
   verb: 'ALWAYS' | 'NEVER' | 'PREFER' | 'AVOID'
   rules: DistilledRule[]
   lineColor: string; ink: string; inkSoft: string; inkFaint: string
