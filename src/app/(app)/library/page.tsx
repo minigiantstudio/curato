@@ -38,6 +38,7 @@ export default function LibraryPage() {
   const [bulkMode, setBulkMode] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [bulkAssignOpen, setBulkAssignOpen] = useState(false)
+  const [bulkDeleting, setBulkDeleting] = useState(false)
 
   const sentinelRef = useRef<HTMLDivElement>(null)
   // Track current filters+page in a ref to avoid stale closures in IntersectionObserver
@@ -119,9 +120,13 @@ export default function LibraryPage() {
   }
 
   async function handleBulkDelete() {
+    if (bulkDeleting || selected.size === 0) return
+    setBulkDeleting(true)
     const ids = Array.from(selected)
     await Promise.all(ids.map(id => deleteCapture(id)))
-    setCaptures(prev => prev.filter(c => !selected.has(c.id)))
+    const idsSet = new Set(ids)
+    setCaptures(prev => prev.filter(c => !idsSet.has(c.id)))
+    setBulkDeleting(false)
     exitBulkMode()
   }
 
@@ -257,7 +262,7 @@ export default function LibraryPage() {
             </button>
             <button
               onClick={handleBulkDelete}
-              disabled={selected.size === 0}
+              disabled={selected.size === 0 || bulkDeleting}
               style={{
                 padding: '6px 12px',
                 borderRadius: '4px',
@@ -266,12 +271,12 @@ export default function LibraryPage() {
                 color: '#F44336',
                 fontFamily: 'var(--mono)',
                 fontSize: '11px',
-                cursor: selected.size === 0 ? 'not-allowed' : 'pointer',
+                cursor: (selected.size === 0 || bulkDeleting) ? 'not-allowed' : 'pointer',
                 whiteSpace: 'nowrap',
-                opacity: selected.size === 0 ? 0.4 : 1,
+                opacity: (selected.size === 0 || bulkDeleting) ? 0.4 : 1,
               }}
             >
-              Delete
+              {bulkDeleting ? 'Deleting…' : 'Delete'}
             </button>
           </div>
           <button
