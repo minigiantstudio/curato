@@ -42,13 +42,16 @@ export function LibraryCard({
   const Icon = Ic[TYPE_ICON_MAP[capture.type]]
   const isPhoto = capture.type === 'photo' && !!capture.media_url
 
+  // Shared flag so handleClick can know if a long-press just fired
+  const longPressDidFire = { current: false }
+
   function handlePointerDown(e: React.PointerEvent) {
+    longPressDidFire.current = false
     const startX = e.clientX
     const startY = e.clientY
-    let fired = false
 
     const timer = setTimeout(() => {
-      fired = true
+      longPressDidFire.current = true
       onLongPress(capture)
     }, 600)
 
@@ -73,22 +76,15 @@ export function LibraryCard({
     }
 
     window.addEventListener('pointermove', handleMove)
-    window.addEventListener('pointerup', handleUp)
-    window.addEventListener('pointercancel', handleUp)
-
-    // Store fired ref for click handler
-    ;(e.currentTarget as HTMLElement).dataset.longpressFired = 'false'
-    const origTimer = timer
-    setTimeout(() => {
-      if (fired) {
-        ;(document.activeElement as HTMLElement | null)?.blur?.()
-      }
-    }, 610)
+    window.addEventListener('pointerup', handleUp, { once: true })
+    window.addEventListener('pointercancel', handleUp, { once: true })
   }
 
-  function handleClick(e: React.MouseEvent) {
-    // If we detect a long press fired recently, skip the click
-    // We use a data attribute set on pointerdown to track this
+  function handleClick() {
+    if (longPressDidFire.current) {
+      longPressDidFire.current = false
+      return
+    }
     onClick(capture)
   }
 
