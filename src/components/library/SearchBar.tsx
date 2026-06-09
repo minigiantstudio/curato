@@ -16,7 +16,7 @@ function getRecent(): string[] {
 }
 
 function saveRecent(query: string) {
-  if (!query.trim()) return
+  if (typeof window === 'undefined' || !query.trim()) return
   const prev = getRecent().filter(q => q !== query)
   const next = [query, ...prev].slice(0, MAX_RECENT)
   localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
@@ -36,6 +36,13 @@ export function SearchBar({ value, onSearch, placeholder = 'Search captures…' 
 
   // Sync when external value changes (e.g. "Clear all" resets query to '')
   useEffect(() => { setLocalValue(value) }, [value])
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [])
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const q = e.target.value
