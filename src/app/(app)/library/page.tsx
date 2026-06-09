@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { searchCaptures, bulkAssignContext, bulkAddTags, deleteCapture } from '@/lib/captures'
+import { searchCaptures, bulkAssignContext, deleteCapture } from '@/lib/captures'
 import type { LibraryFilters } from '@/lib/captures'
 import { getContexts } from '@/lib/contexts'
 import { SearchBar } from '@/components/library/SearchBar'

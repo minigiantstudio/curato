@@ -3,7 +3,7 @@
 Art Director capture and taste synthesis tool. See TASTE_PHASES.md for architecture.
 
 ## Current Phase
-Phase 3 (Contexts) — COMPLETE
+Phase 4 (Library & Search) — COMPLETE
 
 Phase 1 (Capture-First Flow) — COMPLETE
 Phase 1 components built:
@@ -12,6 +12,15 @@ Phase 1 components built:
 - OnlineFlush (reconnect queue flushing)
 - (app) route group layout with CaptureProvider
 - Root redirect → /feed
+
+Phase 4 (Library & Search) — COMPLETE
+Phase 4 components built:
+- `src/lib/captures.ts` — added searchCaptures, updateCapture, deleteCapture, bulkAssignContext, bulkAddTags
+- `src/app/(app)/library/page.tsx` — LibraryScreen (masonry grid, infinite scroll, bulk select)
+- `src/components/library/FilterBar.tsx` — filter chips (type/domain/verdict/context/date)
+- `src/components/library/SearchBar.tsx` — debounced search with recent history
+- `src/components/library/LibraryCard.tsx` — masonry grid cell
+- `src/components/capture/CaptureDetail.tsx` — full capture detail sheet
 
 Phase 3 (Contexts) — COMPLETE
 Phase 3 components built:

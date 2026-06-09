@@ -11,6 +11,7 @@ function BottomNav() {
 
   const tabs = [
     { href: '/feed', label: 'Feed' },
+    { href: '/library', label: 'Library' },
     { href: '/contexts', label: 'Contexts' },
   ]
 
