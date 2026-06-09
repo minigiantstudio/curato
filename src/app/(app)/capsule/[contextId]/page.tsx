@@ -27,15 +27,20 @@ export default function CapsuleScreen({ params }: PageProps) {
 
   useEffect(() => {
     async function load() {
-      const [ctx, cap, hist] = await Promise.all([
-        getContextById(contextId),
-        getCapsule(contextId),
-        getCapsuleHistory(contextId),
-      ])
-      setContext(ctx)
-      setCapsule(cap)
-      setHistory(hist)
-      setLoading(false)
+      try {
+        const [ctx, cap, hist] = await Promise.all([
+          getContextById(contextId),
+          getCapsule(contextId),
+          getCapsuleHistory(contextId),
+        ])
+        setContext(ctx)
+        setCapsule(cap)
+        setHistory(hist)
+      } catch (err) {
+        console.error('CapsuleScreen load error:', err)
+      } finally {
+        setLoading(false)
+      }
     }
     load()
   }, [contextId])
