@@ -1,0 +1,40 @@
+{
+  "name": "Taste — Art Director Capture Tool",
+  "short_name": "Taste",
+  "description": "Capture and synthesize your design taste",
+  "start_url": "/",
+  "display": "fullscreen",
+  "scope": "/",
+  "orientation": "portrait-primary",
+  "theme_color": "#F3ECDD",
+  "background_color": "#F3ECDD",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["productivity"],
+  "screenshots": [
+    {
+      "src": "/screenshot-540.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ]
+}
