@@ -1,10 +1,10 @@
-import { createClient } from '@/lib/supabase'
+import { createClient, getOrCreateSession } from '@/lib/supabase'
 import { queueCapture, readQueue, clearQueue } from '@/lib/offline-queue'
 import type { Capture, CaptureInsert, CaptureType } from '@/types/capture'
 
 export async function saveCapture(data: CaptureInsert): Promise<Capture | null> {
   const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getOrCreateSession()
 
   if (!user) {
     queueCapture(data)

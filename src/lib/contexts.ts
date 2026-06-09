@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase'
+import { createClient, getOrCreateSession } from '@/lib/supabase'
 import type { Context, ContextInsert } from '@/types/context'
 import type { Capture } from '@/types/capture'
 
@@ -146,9 +146,9 @@ export async function getCaptureCounts(
 
 export async function createContext(data: ContextInsert): Promise<Context | null> {
   const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getOrCreateSession()
   if (!user) {
-    console.warn('createContext called without authenticated user')
+    console.warn('createContext: could not get or create session')
     return null
   }
 
