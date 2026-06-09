@@ -234,6 +234,29 @@ export default function CapsuleScreen({ params }: PageProps) {
           {generating ? 'Generating…' : capsule ? 'Generate new version' : 'Generate capsule'}
         </button>
 
+        {/* Open Dossier — only when capsule exists */}
+        {capsule && (
+          <button
+            onClick={() => router.push(`/dossier/${capsule.id}`)}
+            style={{
+              width: '100%',
+              padding: '13px',
+              background: 'none',
+              border: '1.5px solid var(--ink)',
+              borderRadius: 10,
+              fontFamily: 'var(--mono)',
+              fontSize: 12,
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+              color: 'var(--ink)',
+              marginBottom: 24,
+            }}
+          >
+            Open Dossier
+          </button>
+        )}
+
         {/* Frequency word cloud */}
         {capsule && Object.keys(capsule.frequency_map ?? {}).length > 0 && (
           <section style={{ marginBottom: 32 }}>

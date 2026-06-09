@@ -3,6 +3,24 @@
 Art Director capture and taste synthesis tool. See TASTE_PHASES.md for architecture.
 
 ## Current Phase
+Phase 6 (Dossier) — COMPLETE
+
+Phase 5 (Capsule Generation) — COMPLETE
+Phase 5 components built:
+- `src/types/capsule.ts` — Capsule, DistilledRule, CapsuleDiffResult types
+- `src/lib/capsule.ts` — getCapsule, getCapsuleHistory, saveCapsule, diffCapsules, nextVersion, updateCapsulePublic
+- `src/app/api/capsule/generate/route.ts` — POST handler: Claude call server-side + save to Supabase
+- `src/app/(app)/capsule/[contextId]/page.tsx` — CapsuleScreen with generate, history, word cloud, diff
+- `src/app/(app)/contexts/[id]/page.tsx` — CapsuleTab navigates to CapsuleScreen
+
+Phase 6 (Dossier) — COMPLETE
+Phase 6 components built:
+- `src/components/dossier/DossierDocument.tsx` — editorial layout, paper/dark theme, print CSS
+- `src/components/dossier/PublicDossierClient.tsx` — client wrapper for public route
+- `src/app/(app)/dossier/[capsuleId]/page.tsx` — authenticated dossier with theme toggle, PDF export, public toggle
+- `src/app/share/[id]/page.tsx` — public route with OG meta tags (capsule must be set to public)
+- `src/app/(app)/capsule/[contextId]/page.tsx` — added Open Dossier button
+
 Phase 4 (Library & Search) — COMPLETE
 
 Phase 1 (Capture-First Flow) — COMPLETE
