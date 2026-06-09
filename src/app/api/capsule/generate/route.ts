@@ -74,10 +74,14 @@ export async function POST(req: NextRequest) {
 
     // Also fetch parent context captures if applicable
     if (context.parent_context_id) {
-      const { data: parentCapturesData } = await supabase
+      const { data: parentCapturesData, error: parentError } = await supabase
         .from('captures')
         .select('*')
         .contains('context_ids', [context.parent_context_id])
+
+      if (parentError) {
+        console.warn('generate: failed to fetch parent captures:', parentError)
+      }
 
       if (parentCapturesData) {
         const parentCaptures = parentCapturesData as Capture[]
@@ -98,8 +102,8 @@ export async function POST(req: NextRequest) {
         c.verdict ? `[${c.verdict.toUpperCase()}]` : '[UNSET]',
         c.content.slice(0, 300),
       ]
-      if (c.tags.length) parts.push(`tags: ${c.tags.join(', ')}`)
-      if (c.domains.length) parts.push(`domains: ${c.domains.join(', ')}`)
+      if (c.tags?.length) parts.push(`tags: ${c.tags?.join(', ')}`)
+      if (c.domains?.length) parts.push(`domains: ${c.domains?.join(', ')}`)
       if (c.rule_verb) parts.push(`rule: ${c.rule_verb}`)
       return parts.join(' | ')
     }).join('\n') || '(no captures yet)'
@@ -138,12 +142,15 @@ Rules:
       .replace(/\s*```$/, '')
       .trim()
 
-    const parsed = JSON.parse(cleaned) as {
-      declaration: string
-      distilled_rules: DistilledRule[]
-      dominant_domains: string[]
-      frequency_map: Record<string, number>
-      capsule_summary: string
+    let parsed: { declaration: string; distilled_rules: DistilledRule[]; dominant_domains: string[]; frequency_map: Record<string, number>; capsule_summary: string }
+    try {
+      parsed = JSON.parse(cleaned)
+    } catch {
+      throw new Error('Failed to parse Capsule JSON from Claude. Raw response: ' + rawResponse.slice(0, 200))
+    }
+
+    if (!parsed.declaration || typeof parsed.declaration !== 'string') {
+      throw new Error('Claude returned invalid Capsule structure — missing declaration')
     }
 
     const capsule = await saveCapsule({
