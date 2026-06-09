@@ -74,7 +74,7 @@ export default function DossierScreen({ params }: PageProps) {
 
   const handleCopyLink = useCallback(async () => {
     if (!capsule) return
-    const url = `${window.location.origin}/capsule/${capsule.id}`
+    const url = `${window.location.origin}/share/${capsule.id}`
     await navigator.clipboard.writeText(url)
     setCopyFeedback(true)
     setTimeout(() => setCopyFeedback(false), 1800)
