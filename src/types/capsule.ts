@@ -17,8 +17,10 @@ export interface Capsule {
   exported_at: string | null
   protocol_version: string
   protocol_json_url: string | null
-  is_public?: boolean
+  is_public: boolean
+  // Not persisted in DB — returned alongside capsule from generation API
   dominant_domains?: string[]
+  // Not persisted in DB — returned alongside capsule from generation API
   capsule_summary?: string
 }
 
@@ -29,6 +31,7 @@ export interface CapsuleInsert {
   declaration: string
   rules: DistilledRule[]
   frequency_map: Record<string, number>
+  is_public?: boolean
 }
 
 export interface CapsuleDiffResult {
