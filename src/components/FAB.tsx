@@ -10,7 +10,7 @@ export function FAB() {
       aria-label="New capture"
       style={{
         position: 'fixed',
-        bottom: 76,
+        bottom: 'calc(52px + 20px + env(safe-area-inset-bottom))',
         right: 20,
         width: 52,
         height: 52,
