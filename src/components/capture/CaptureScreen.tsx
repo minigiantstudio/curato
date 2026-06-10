@@ -182,6 +182,13 @@ function NoteCapture({ type, onBack, onNext }: { type: 'note' | 'feeling'; onBac
   )
 }
 
+// ── Module-level constants ────────────────────────────────────
+const VOICE_SAMPLES = [
+  'The way the light pools on the—',
+  'The way the light pools on the concrete here — that warmth shouldn\'t work against the cold material, but it does.',
+  'The way the light pools on the concrete here — that warmth shouldn\'t work against the cold material, but it does. This is what earned contrast feels like.',
+]
+
 // ── Photo / Voice / Collection ────────────────────────────────
 function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'collection'; onBack: () => void; onNext: CaptureScreenProps['onNext'] }) {
   const [content, setContent] = useState('')
@@ -190,6 +197,7 @@ function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'col
   const [recording, setRecording] = useState(false)
   const [transcript, setTranscript] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
+  const previewUrlRef = useRef<string | null>(null)
   const typeInfo = CAPTURE_TYPES.find(t => t.id === type)!
 
   // Auto-open camera on mount for photo/collection
@@ -199,27 +207,22 @@ function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'col
     }
   }, [type])
 
-  // Cleanup object URL on unmount to avoid memory leaks
+  // Revoke object URL only on unmount
   useEffect(() => {
     return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl)
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current)
     }
-  }, [previewUrl])
+  }, [])
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
-    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current)
+    const url = URL.createObjectURL(file)
+    previewUrlRef.current = url
     setMediaFile(file)
-    setPreviewUrl(URL.createObjectURL(file))
+    setPreviewUrl(url)
   }
-
-  // ── Voice mock (unchanged) ─────────────────────────────────
-  const VOICE_SAMPLES = [
-    'The way the light pools on the—',
-    'The way the light pools on the concrete here — that warmth shouldn\'t work against the cold material, but it does.',
-    'The way the light pools on the concrete here — that warmth shouldn\'t work against the cold material, but it does. This is what earned contrast feels like.',
-  ]
 
   useEffect(() => {
     if (!recording) return
@@ -232,7 +235,6 @@ function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'col
       if (step >= VOICE_SAMPLES.length) { clearInterval(iv); setRecording(false) }
     }, 1400)
     return () => clearInterval(iv)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recording])
 
   const canProceed = type === 'voice' ? transcript.length > 0 : (mediaFile != null || content.length > 0)
