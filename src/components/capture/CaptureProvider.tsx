@@ -6,7 +6,7 @@ import { TypeSheet } from './TypeSheet'
 import { CaptureScreen } from './CaptureScreen'
 import { ContextStep, type ContextData } from './ContextStep'
 import { DoneScreen, type SavedEntry } from './DoneScreen'
-import { saveCapture, flushOfflineQueue } from '@/lib/captures'
+import { saveCapture, saveCaptureWithMedia, flushOfflineQueue } from '@/lib/captures'
 import { getOrCreateAnonSession } from '@/lib/auth'
 import { triggerAgent } from '@/lib/agent'
 import type { CaptureType, Verdict, RuleVerb, CaptureInsert } from '@/types/capture'
@@ -17,6 +17,7 @@ type FlowStep = 'idle' | 'typeSheet' | 'capture' | 'context' | 'done'
 interface FlowData {
   type?: CaptureType
   content?: string
+  mediaFile?: File
   ruleVerb?: RuleVerb
   ruleDomain?: string
   verdict?: Verdict
@@ -54,7 +55,7 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
   }
 
   // ── CaptureScreen → ContextStep (or Done for reactions) ──────
-  function onCaptureNext(data: { content: string; ruleVerb?: RuleVerb; ruleDomain?: string; verdict?: Verdict }) {
+  function onCaptureNext(data: { content: string; mediaFile?: File; ruleVerb?: RuleVerb; ruleDomain?: string; verdict?: Verdict }) {
     flowData.current = { ...flowData.current, ...data }
     const { type, verdict } = flowData.current
 
@@ -74,7 +75,7 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
 
   // ── Persist + transition to done ─────────────────────────────
   async function persistAndDone(ctx?: ContextData) {
-    const { type, content, ruleVerb, verdict } = flowData.current
+    const { type, content, ruleVerb, verdict, mediaFile } = flowData.current
 
     // Ensure anon session exists (best-effort; saveCapture handles offline)
     let session = null
@@ -91,7 +92,11 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
       context_ids: [],
     }
 
-    const saved = await saveCapture(insert)
+    // Upload photo if present, otherwise plain save
+    const saved = mediaFile
+      ? await saveCaptureWithMedia(insert, mediaFile, 'photos')
+      : await saveCapture(insert)
+
     if (saved && session?.user?.id) {
       void triggerAgent(saved.id, session.user.id)
     }
