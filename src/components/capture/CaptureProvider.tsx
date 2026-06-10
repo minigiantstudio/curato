@@ -139,7 +139,7 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
           style={{
             position: 'fixed', inset: 0,
             background: 'var(--cream)',
-            zIndex: 20,
+            zIndex: 50,
             display: 'flex', flexDirection: 'column',
           }}
         >

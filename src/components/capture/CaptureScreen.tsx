@@ -173,7 +173,7 @@ function NoteCapture({ type, onBack, onNext }: { type: 'note' | 'feeling'; onBac
         </div>
         <button
           onClick={() => onNext({ content: effectiveContent })}
-          style={{ padding: '15px', background: 'var(--violet)', borderRadius: 10, color: '#fff', fontSize: 13, letterSpacing: '0.04em', cursor: 'pointer' }}
+          style={{ padding: '15px', background: 'var(--violet)', borderRadius: 10, color: '#fff', fontSize: 13, letterSpacing: '0.04em', cursor: 'pointer', width: '100%' }}
         >
           Add context →
         </button>
