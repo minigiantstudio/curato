@@ -155,7 +155,7 @@ export default function FeedPage() {
             <p style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 6 }}>Tap + to start.</p>
           </div>
         )}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div className="feed-grid" style={{ columns: 'auto 2', gap: '16px' }}>
           {captures.map(c => (
             <FeedCard
                 key={c.id}

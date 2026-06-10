@@ -207,3 +207,31 @@
     margin-right: 8px;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────── */
+/* Responsive Masonry Grid */
+/* ─────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  /* Mobile: single column */
+  .feed-grid {
+    column-count: 1;
+    gap: 8px;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 767px) {
+  /* Tablet: 2 columns */
+  .feed-grid {
+    column-count: 2;
+    gap: 12px;
+  }
+}
+
+@media (min-width: 768px) {
+  /* Desktop: 2 columns */
+  .feed-grid {
+    column-count: 2;
+    gap: 16px;
+  }
+}
