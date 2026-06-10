@@ -172,3 +172,38 @@
     margin-left: 8px;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────── */
+/* Touch-Friendly Chip/Tag Sizing */
+/* ─────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .chip,
+  .tag {
+    min-height: 40px;
+    padding: 8px 12px;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .chip + .chip,
+  .tag + .tag {
+    margin-right: 12px; /* Minimum tap spacing */
+  }
+}
+
+@media (min-width: 481px) {
+  .chip,
+  .tag {
+    min-height: 32px;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .chip + .chip,
+  .tag + .tag {
+    margin-right: 8px;
+  }
+}
