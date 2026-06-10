@@ -12,7 +12,7 @@ import {
 interface CaptureScreenProps {
   type: CaptureType
   onBack: () => void
-  onNext: (data: { content: string; ruleVerb?: RuleVerb; ruleDomain?: string; verdict?: Verdict }) => void
+  onNext: (data: { content: string; mediaFile?: File; ruleVerb?: RuleVerb; ruleDomain?: string; verdict?: Verdict }) => void
 }
 
 // ── Reaction ─────────────────────────────────────────────────
@@ -185,11 +185,36 @@ function NoteCapture({ type, onBack, onNext }: { type: 'note' | 'feeling'; onBac
 // ── Photo / Voice / Collection ────────────────────────────────
 function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'collection'; onBack: () => void; onNext: CaptureScreenProps['onNext'] }) {
   const [content, setContent] = useState('')
-  const [mediaReady, setMediaReady] = useState(false)
+  const [mediaFile, setMediaFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [recording, setRecording] = useState(false)
   const [transcript, setTranscript] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
   const typeInfo = CAPTURE_TYPES.find(t => t.id === type)!
 
+  // Auto-open camera on mount for photo/collection
+  useEffect(() => {
+    if (type !== 'voice') {
+      inputRef.current?.click()
+    }
+  }, [type])
+
+  // Cleanup object URL on unmount to avoid memory leaks
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl)
+    }
+  }, [previewUrl])
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    setMediaFile(file)
+    setPreviewUrl(URL.createObjectURL(file))
+  }
+
+  // ── Voice mock (unchanged) ─────────────────────────────────
   const VOICE_SAMPLES = [
     'The way the light pools on the—',
     'The way the light pools on the concrete here — that warmth shouldn\'t work against the cold material, but it does.',
@@ -210,7 +235,7 @@ function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'col
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [recording])
 
-  const canProceed = type === 'voice' ? transcript.length > 0 : (mediaReady || content.length > 0)
+  const canProceed = type === 'voice' ? transcript.length > 0 : (mediaFile != null || content.length > 0)
 
   return (
     <div className="screen-in" style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--cream)' }}>
@@ -223,6 +248,7 @@ function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'col
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
         {type === 'voice' ? (
+          /* ── Voice (unchanged mock) ── */
           <div style={{ margin: 16, borderRadius: 12, background: 'var(--panel)', padding: '28px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, border: '1.5px solid var(--line-soft)' }}>
             <Wave active={recording} />
             <button
@@ -243,46 +269,61 @@ function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'col
             </span>
           </div>
         ) : (
+          /* ── Photo / Collection ── */
           <div style={{ position: 'relative', margin: 16, borderRadius: 12, overflow: 'hidden', border: '1.5px solid var(--line-soft)' }}>
+            {/* Hidden camera input — triggers native camera immediately */}
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleFileChange}
+              style={{ display: 'none' }}
+            />
+
+            {/* Tap area: shows preview if photo taken, otherwise camera icon */}
             <div
-              onClick={() => !mediaReady && setMediaReady(true)}
+              onClick={() => inputRef.current?.click()}
               style={{
                 aspectRatio: type === 'collection' ? '3/2' : '4/3',
-                background: mediaReady ? 'linear-gradient(155deg,#c8bfaa 0%,#a89880 60%,#8a7460 100%)' : 'var(--panel)',
+                background: previewUrl ? 'var(--ink)' : 'var(--panel)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: mediaReady ? 'default' : 'pointer',
-                transition: 'background .3s', flexDirection: 'column', gap: 10,
+                cursor: 'pointer',
+                flexDirection: 'column', gap: 10,
+                position: 'relative', overflow: 'hidden',
               }}
             >
-              {!mediaReady ? (
+              {previewUrl ? (
+                /* Photo preview */
+                <>
+                  <img
+                    src={previewUrl}
+                    alt="Captured photo"
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                  {/* Retake button overlay */}
+                  <div style={{ position: 'absolute', bottom: 10, right: 10, zIndex: 2 }}>
+                    <button
+                      onClick={e => { e.stopPropagation(); inputRef.current?.click() }}
+                      style={{
+                        padding: '6px 12px', borderRadius: 20,
+                        background: 'rgba(20,18,16,0.7)', backdropFilter: 'blur(6px)',
+                        color: '#fff', fontSize: 11, letterSpacing: '0.04em',
+                        border: 'none', cursor: 'pointer',
+                      }}
+                    >
+                      Retake
+                    </button>
+                  </div>
+                </>
+              ) : (
+                /* Empty state */
                 <>
                   <Ic.camera width={36} height={36} style={{ color: 'var(--ink-faint)' }} />
                   <span style={{ fontSize: 11, color: 'var(--ink-faint)', letterSpacing: '0.04em' }}>Tap to capture</span>
                 </>
-              ) : (
-                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', padding: 12 }}>
-                  <button
-                    onClick={e => { e.stopPropagation(); setRecording(r => !r) }}
-                    style={{
-                      width: 44, height: 44, borderRadius: 22,
-                      background: recording ? 'var(--red)' : 'rgba(20,18,16,0.75)',
-                      color: '#fff', border: 'none', display: 'flex',
-                      alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                      backdropFilter: 'blur(6px)',
-                      animation: recording ? 'pulse 1s infinite' : 'none',
-                    }}
-                  >
-                    <Ic.mic width={20} height={20} />
-                  </button>
-                </div>
               )}
             </div>
-            {recording && (
-              <div className="fade-in" style={{ position: 'absolute', inset: 0, background: 'rgba(20,18,16,0.65)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 14 }}>
-                <Wave active color="#e8e4dc" />
-                <span style={{ fontSize: 11, color: 'rgba(232,228,220,0.8)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>● Speaking…</span>
-              </div>
-            )}
           </div>
         )}
 
@@ -291,7 +332,7 @@ function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'col
           <textarea
             value={content}
             onChange={e => setContent(e.target.value)}
-            placeholder={mediaReady ? 'Add a note… or tap 🎙 to speak' : 'Type an observation…'}
+            placeholder={previewUrl ? 'Add a note about this photo…' : 'Type an observation…'}
             rows={3}
             style={{ width: '100%', resize: 'none', background: 'var(--cream-2)', border: '1.5px solid var(--line-soft)', borderRadius: 8, color: 'var(--ink)', fontSize: 13, padding: '10px 12px', lineHeight: 1.55 }}
           />
@@ -300,13 +341,14 @@ function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'col
 
       <div style={{ padding: '10px 16px 14px' }}>
         <button
-          onClick={() => onNext({ content })}
+          onClick={() => onNext({ content, mediaFile: mediaFile ?? undefined })}
+          disabled={!canProceed}
           style={{
             width: '100%', padding: '15px',
             background: canProceed ? 'var(--violet)' : 'var(--panel)',
             borderRadius: 10,
             color: canProceed ? '#fff' : 'var(--ink-faint)',
-            fontSize: 13, letterSpacing: '0.04em', cursor: 'pointer',
+            fontSize: 13, letterSpacing: '0.04em', cursor: canProceed ? 'pointer' : 'default',
             transition: 'background .2s, color .2s',
           }}
         >
