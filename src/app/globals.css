@@ -235,3 +235,49 @@
     gap: 16px;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────────── */
+/* Responsive Dossier Layout */
+/* ─────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .dossier-container {
+    max-width: 100%;
+    padding: 12px;
+  }
+
+  .dossier-header {
+    padding: 24px 12px;
+  }
+
+  .rules-grid {
+    grid-template-columns: 1fr; /* Stack on mobile */
+    gap: 12px;
+  }
+
+  .frequency-words {
+    line-height: 1.6;
+    font-size: clamp(12px, 4vw, 18px);
+  }
+}
+
+@media (min-width: 481px) {
+  .dossier-container {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .dossier-header {
+    padding: 40px 20px;
+  }
+
+  .rules-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+  }
+
+  .frequency-words {
+    font-size: clamp(14px, 2vw, 32px);
+  }
+}

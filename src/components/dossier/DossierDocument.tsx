@@ -108,10 +108,10 @@ export function DossierDocument({ capsule, context, parent, theme, isOwner: _isO
       </div>
 
       {/* ── Document body ── */}
-      <div style={{ maxWidth: 1120, margin: '0 auto', padding: '60px 40px 120px' }}>
+      <div className="dossier-container" style={{ maxWidth: 1120, margin: '0 auto', padding: '60px 40px 120px' }}>
 
         {/* ── Masthead ── */}
-        <header style={{ marginBottom: 64, borderBottom: `1px solid ${lineColor}`, paddingBottom: 48 }}>
+        <header className="dossier-header" style={{ marginBottom: 64, borderBottom: `1px solid ${lineColor}`, paddingBottom: 48 }}>
           <p style={{
             fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase',
             color: inkFaint, marginBottom: 16, fontFamily: 'var(--mono)',
@@ -156,7 +156,7 @@ export function DossierDocument({ capsule, context, parent, theme, isOwner: _isO
         {freqWords.length > 0 && (
           <section style={{ marginBottom: 64 }}>
             <SectionHead label="01" title="Frequency Map" lineColor={lineColor} inkFaint={inkFaint} />
-            <div style={{ lineHeight: 2.0, maxWidth: 900 }}>
+            <div className="frequency-words" style={{ lineHeight: 2.0, maxWidth: 900 }}>
               {freqWords.map(([word, weight]) => {
                 const size = 12 + Math.round((weight / maxWeight) * 22)
                 const opacity = 0.3 + (weight / maxWeight) * 0.7
@@ -179,7 +179,7 @@ export function DossierDocument({ capsule, context, parent, theme, isOwner: _isO
         {rules.length > 0 && (
           <section style={{ marginBottom: 64 }}>
             <SectionHead label="02" title="Rules" lineColor={lineColor} inkFaint={inkFaint} />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24 }}>
+            <div className="rules-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 24 }}>
               {(['ALWAYS', 'NEVER', 'PREFER', 'AVOID'] as const).map(verb => (
                 <VerbColumn
                   key={verb}
