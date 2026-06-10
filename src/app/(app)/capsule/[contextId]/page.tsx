@@ -288,6 +288,7 @@ export default function CapsuleScreen({ params }: PageProps) {
               <button
                 onClick={() => setShowDiff(v => !v)}
                 style={{
+                  width: '100%',
                   marginTop: 12, padding: '10px 20px',
                   background: 'none', border: '1.5px solid var(--violet)',
                   borderRadius: 8, color: 'var(--violet)',
