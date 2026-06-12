@@ -182,22 +182,18 @@ function NoteCapture({ type, onBack, onNext }: { type: 'note' | 'feeling'; onBac
   )
 }
 
-// ── Module-level constants ────────────────────────────────────
-const VOICE_SAMPLES = [
-  'The way the light pools on the—',
-  'The way the light pools on the concrete here — that warmth shouldn\'t work against the cold material, but it does.',
-  'The way the light pools on the concrete here — that warmth shouldn\'t work against the cold material, but it does. This is what earned contrast feels like.',
-]
-
 // ── Photo / Voice / Collection ────────────────────────────────
 function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'collection'; onBack: () => void; onNext: CaptureScreenProps['onNext'] }) {
   const [content, setContent] = useState('')
   const [mediaFile, setMediaFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [recording, setRecording] = useState(false)
+  const [transcribing, setTranscribing] = useState(false)
   const [transcript, setTranscript] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const previewUrlRef = useRef<string | null>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const chunksRef = useRef<Blob[]>([])
   const typeInfo = CAPTURE_TYPES.find(t => t.id === type)!
 
   // Auto-open camera on mount for photo/collection
@@ -224,18 +220,41 @@ function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'col
     setPreviewUrl(url)
   }
 
-  useEffect(() => {
-    if (!recording) return
-    let step = 0
-    const iv = setInterval(() => {
-      step++
-      const sample = VOICE_SAMPLES[Math.min(step - 1, VOICE_SAMPLES.length - 1)]
-      setTranscript(sample)
-      setContent(sample)
-      if (step >= VOICE_SAMPLES.length) { clearInterval(iv); setRecording(false) }
-    }, 1400)
-    return () => clearInterval(iv)
-  }, [recording])
+  async function startRecording() {
+    setTranscript('')
+    setContent('')
+    chunksRef.current = []
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    const mr = new MediaRecorder(stream)
+    mediaRecorderRef.current = mr
+    mr.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data) }
+    mr.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop())
+      const mimeType = mr.mimeType || 'audio/webm'
+      const blob = new Blob(chunksRef.current, { type: mimeType })
+      setRecording(false)
+      setTranscribing(true)
+      try {
+        const fd = new FormData()
+        fd.append('audio', blob, mimeType.includes('mp4') ? 'recording.m4a' : 'recording.webm')
+        const res = await fetch('/api/transcribe', { method: 'POST', body: fd })
+        if (!res.ok) throw new Error('Transcription failed')
+        const { transcript: text } = await res.json() as { transcript: string }
+        setTranscript(text)
+        setContent(text)
+      } catch (err) {
+        console.error('Transcription error:', err)
+      } finally {
+        setTranscribing(false)
+      }
+    }
+    mr.start()
+    setRecording(true)
+  }
+
+  function stopRecording() {
+    mediaRecorderRef.current?.stop()
+  }
 
   const canProceed = type === 'voice' ? transcript.length > 0 : (mediaFile != null || content.length > 0)
 
@@ -252,22 +271,24 @@ function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'col
         {type === 'voice' ? (
           /* ── Voice (unchanged mock) ── */
           <div style={{ margin: 16, borderRadius: 12, background: 'var(--panel)', padding: '28px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, border: '1.5px solid var(--line-soft)' }}>
-            <Wave active={recording} />
+            <Wave active={recording || transcribing} />
             <button
-              onClick={() => { if (recording) { setRecording(false) } else { setRecording(true); setTranscript(''); setContent('') } }}
+              onClick={() => { if (recording) { stopRecording() } else if (!transcribing) { void startRecording() } }}
+              disabled={transcribing}
               style={{
                 width: 64, height: 64, borderRadius: 32,
                 background: recording ? 'var(--red)' : 'var(--violet)',
                 color: '#fff', border: 'none', display: 'flex',
-                alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                alignItems: 'center', justifyContent: 'center', cursor: transcribing ? 'default' : 'pointer',
                 animation: recording ? 'pulse 1.2s infinite' : 'none',
                 boxShadow: `0 6px 20px ${recording ? 'rgba(158,52,66,0.4)' : 'rgba(74,61,176,0.35)'}`,
+                opacity: transcribing ? 0.5 : 1,
               }}
             >
               <Ic.mic width={26} height={26} />
             </button>
             <span style={{ fontSize: 11, color: recording ? 'var(--red)' : 'var(--ink-faint)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-              {recording ? '● Recording…' : transcript ? 'Tap to re-record' : 'Tap to record'}
+              {transcribing ? 'Transcribing…' : recording ? '● Recording…' : transcript ? 'Tap to re-record' : 'Tap to record'}
             </span>
           </div>
         ) : (
