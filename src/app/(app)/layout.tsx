@@ -38,9 +38,9 @@ function BottomNav() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              padding: '12px 0',
+              padding: '17px 0',
               fontFamily: 'var(--mono)',
-              fontSize: '10px',
+              fontSize: '11px',
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
               textDecoration: 'none',
@@ -60,7 +60,7 @@ function BottomNav() {
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <CaptureProvider>
-      <div style={{ position: 'relative', height: '100%', overflow: 'hidden', paddingBottom: '52px' }}>
+      <div style={{ position: 'relative', height: '100%', overflow: 'hidden', paddingBottom: 'calc(52px + env(safe-area-inset-bottom))' }}>
         {children}
         <FAB />
         <SyncIndicator />

@@ -117,7 +117,7 @@ export default function FeedPage() {
           ] as [string, string][]).map(([n, l]) => (
             <div key={l} style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
               <span style={{ fontFamily: 'var(--display)', fontSize: 15, fontWeight: 400, color: 'var(--ink)' }}>{n}</span>
-              <span style={{ fontSize: 9, letterSpacing: '0.1em', color: 'var(--ink-faint)', textTransform: 'uppercase' }}>{l}</span>
+              <span style={{ fontSize: 10, letterSpacing: '0.1em', color: 'var(--ink-faint)', textTransform: 'uppercase' }}>{l}</span>
             </div>
           ))}
         </div>
@@ -137,7 +137,7 @@ export default function FeedPage() {
       <div style={{ padding: '10px 20px 100px' }}>
         {!loading && captures.length > 0 && (
           <div style={{ padding: '4px 0 8px' }}>
-            <span style={{ fontSize: 9, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
+            <span style={{ fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
               Latest captures
             </span>
           </div>

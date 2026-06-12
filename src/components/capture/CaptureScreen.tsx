@@ -21,7 +21,7 @@ function ReactionCapture({ onBack, onNext }: { onBack: () => void; onNext: Captu
   return (
     <div className="screen-in" style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--cream)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', borderBottom: '1px solid var(--line-soft)' }}>
-        <button onClick={onBack} style={{ background: 'none', color: 'var(--ink-soft)', cursor: 'pointer', padding: 4 }}>
+        <button onClick={onBack} style={{ background: 'none', color: 'var(--ink-soft)', cursor: 'pointer', padding: '10px 8px' }}>
           <Ic.back width={20} height={20} />
         </button>
         <span className="label">Reaction</span>
@@ -69,7 +69,7 @@ function RuleCapture({ onBack, onNext }: { onBack: () => void; onNext: CaptureSc
   return (
     <div className="screen-in" style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--cream)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', borderBottom: '1px solid var(--line-soft)' }}>
-        <button onClick={onBack} style={{ background: 'none', color: 'var(--ink-soft)', cursor: 'pointer', padding: 4 }}>
+        <button onClick={onBack} style={{ background: 'none', color: 'var(--ink-soft)', cursor: 'pointer', padding: '10px 8px' }}>
           <Ic.back width={20} height={20} />
         </button>
         <span className="label">State a Rule</span>
@@ -144,7 +144,7 @@ function NoteCapture({ type, onBack, onNext }: { type: 'note' | 'feeling'; onBac
   return (
     <div className="screen-in" style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--cream)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', borderBottom: '1px solid var(--line-soft)' }}>
-        <button onClick={onBack} style={{ background: 'none', color: 'var(--ink-soft)', cursor: 'pointer', padding: 4 }}>
+        <button onClick={onBack} style={{ background: 'none', color: 'var(--ink-soft)', cursor: 'pointer', padding: '10px 8px' }}>
           <Ic.back width={20} height={20} />
         </button>
         <span className="label">{type === 'note' ? 'Observation' : 'Feeling'}</span>
@@ -261,7 +261,7 @@ function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'col
   return (
     <div className="screen-in" style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--cream)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', borderBottom: '1px solid var(--line-soft)' }}>
-        <button onClick={onBack} style={{ background: 'none', color: 'var(--ink-soft)', cursor: 'pointer', padding: 4 }}>
+        <button onClick={onBack} style={{ background: 'none', color: 'var(--ink-soft)', cursor: 'pointer', padding: '10px 8px' }}>
           <Ic.back width={20} height={20} />
         </button>
         <span className="label">{typeInfo.label}</span>
@@ -348,13 +348,15 @@ function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'col
         )}
 
         <div style={{ padding: '4px 16px 12px' }}>
-          <div className="label" style={{ marginBottom: 6 }}>{transcript ? 'Transcript' : 'Annotation'}</div>
+          <div className="label" style={{ marginBottom: 6 }}>
+            {type === 'voice' ? (transcript ? 'Transcript — tap to edit' : 'Note') : 'Annotation'}
+          </div>
           <textarea
             value={content}
             onChange={e => setContent(e.target.value)}
-            placeholder={previewUrl ? 'Add a note about this photo…' : 'Type an observation…'}
+            placeholder={type === 'voice' ? 'Add a written note…' : previewUrl ? 'Add a note about this photo…' : 'Type an observation…'}
             rows={3}
-            style={{ width: '100%', resize: 'none', background: 'var(--cream-2)', border: '1.5px solid var(--line-soft)', borderRadius: 8, color: 'var(--ink)', fontSize: 13, padding: '10px 12px', lineHeight: 1.55 }}
+            style={{ width: '100%', resize: 'none', background: transcript ? 'var(--cream)' : 'var(--cream-2)', border: `1.5px solid ${transcript ? 'var(--line)' : 'var(--line-soft)'}`, borderRadius: 8, color: 'var(--ink)', fontSize: 13, padding: '10px 12px', lineHeight: 1.55 }}
           />
         </div>
       </div>

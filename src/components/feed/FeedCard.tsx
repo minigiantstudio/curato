@@ -138,15 +138,15 @@ export function FeedCard({ capture, contexts = [], onEditContext, onLongPress }:
         {/* Label + verdict + time */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 2 }}>
-            <span style={{ fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
+            <span style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
               {typeInfo?.label}
             </span>
             {capture.verdict && (
-              <span style={{ fontSize: 9, color: verdictColor ?? undefined, fontWeight: 500 }}>
+              <span style={{ fontSize: 10, color: verdictColor ?? undefined, fontWeight: 500 }}>
                 {capture.verdict === 'keep' ? '✓' : '✗'}
               </span>
             )}
-            <span style={{ marginLeft: 'auto', fontSize: 9, color: 'var(--ink-faint)' }}>
+            <span style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--ink-faint)' }}>
               {formatTime(capture.created_at)}
             </span>
           </div>
@@ -193,7 +193,7 @@ export function FeedCard({ capture, contexts = [], onEditContext, onLongPress }:
             <span
               key={t}
               style={{
-                fontSize: 9,
+                fontSize: 10,
                 color: 'var(--violet)',
                 border: '1px solid var(--violet)',
                 padding: '2px 6px',
@@ -213,7 +213,7 @@ export function FeedCard({ capture, contexts = [], onEditContext, onLongPress }:
             <span
               key={d}
               style={{
-                fontSize: 9,
+                fontSize: 10,
                 color: 'var(--ink-soft)',
                 background: 'var(--panel)',
                 padding: '2px 6px',
@@ -233,7 +233,7 @@ export function FeedCard({ capture, contexts = [], onEditContext, onLongPress }:
             <span
               key={ctx.id}
               style={{
-                fontSize: 9,
+                fontSize: 10,
                 color: ctx.type === 'brand' ? 'var(--violet)' : 'var(--ink-faint)',
                 background: ctx.type === 'brand' ? 'rgba(74,61,176,0.07)' : 'var(--panel)',
                 border: `1px solid ${ctx.type === 'brand' ? 'var(--violet)' : 'var(--line-soft)'}`,

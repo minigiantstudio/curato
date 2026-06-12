@@ -40,8 +40,9 @@ export function TypeSheet({ onSelect, onClose }: TypeSheetProps) {
           What are you capturing?
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          {CAPTURE_TYPES.map(t => {
+          {CAPTURE_TYPES.map((t, i) => {
             const Icon = TYPE_ICONS[t.id]
+            const isOrphan = i === CAPTURE_TYPES.length - 1 && CAPTURE_TYPES.length % 2 !== 0
             return (
               <button
                 key={t.id}
@@ -51,6 +52,7 @@ export function TypeSheet({ onSelect, onClose }: TypeSheetProps) {
                   padding: '12px', background: 'var(--cream-2)',
                   borderRadius: 10, cursor: 'pointer', textAlign: 'left',
                   border: '1.5px solid var(--line-soft)',
+                  ...(isOrphan ? { gridColumn: '1 / -1' } : {}),
                 }}
               >
                 <div style={{
@@ -62,7 +64,7 @@ export function TypeSheet({ onSelect, onClose }: TypeSheetProps) {
                 </div>
                 <div>
                   <div style={{ fontSize: 12, color: 'var(--ink)', letterSpacing: '0.01em' }}>{t.label}</div>
-                  <div style={{ fontSize: 9, color: 'var(--ink-faint)', marginTop: 1, letterSpacing: '0.02em' }}>{t.hint}</div>
+                  <div style={{ fontSize: 10, color: 'var(--ink-faint)', marginTop: 1, letterSpacing: '0.02em' }}>{t.hint}</div>
                 </div>
               </button>
             )
