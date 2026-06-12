@@ -2,6 +2,10 @@
 
 Art Director capture and taste synthesis tool. See TASTE_PHASES.md for architecture.
 
+## Git & Deploy Rules
+- **Always push to `main`** — no feature branches; every commit goes directly to `origin/main`
+- Vercel is connected to `main` and auto-deploys to production on every push
+
 ## Current Phase
 Phase 6 (Dossier) — COMPLETE
 
