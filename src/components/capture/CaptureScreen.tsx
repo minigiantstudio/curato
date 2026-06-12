@@ -190,9 +190,11 @@ function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'col
   const [recording, setRecording] = useState(false)
   const [transcribing, setTranscribing] = useState(false)
   const [transcript, setTranscript] = useState('')
+  const [voiceError, setVoiceError] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const previewUrlRef = useRef<string | null>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const streamRef = useRef<MediaStream | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const typeInfo = CAPTURE_TYPES.find(t => t.id === type)!
 
@@ -203,10 +205,11 @@ function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'col
     }
   }, [type])
 
-  // Revoke object URL only on unmount
+  // Stop mic + revoke object URL on unmount
   useEffect(() => {
     return () => {
       if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current)
+      streamRef.current?.getTracks().forEach(t => t.stop())
     }
   }, [])
 
@@ -221,15 +224,24 @@ function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'col
   }
 
   async function startRecording() {
+    setVoiceError('')
     setTranscript('')
     setContent('')
     chunksRef.current = []
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    let stream: MediaStream
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    } catch {
+      setVoiceError('Microphone access denied. Please allow mic access and try again.')
+      return
+    }
+    streamRef.current = stream
     const mr = new MediaRecorder(stream)
     mediaRecorderRef.current = mr
     mr.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data) }
     mr.onstop = async () => {
       stream.getTracks().forEach(t => t.stop())
+      streamRef.current = null
       const mimeType = mr.mimeType || 'audio/webm'
       const blob = new Blob(chunksRef.current, { type: mimeType })
       setRecording(false)
@@ -242,8 +254,8 @@ function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'col
         const { transcript: text } = await res.json() as { transcript: string }
         setTranscript(text)
         setContent(text)
-      } catch (err) {
-        console.error('Transcription error:', err)
+      } catch {
+        setVoiceError('Transcription failed. Tap to try again.')
       } finally {
         setTranscribing(false)
       }
@@ -269,7 +281,6 @@ function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'col
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
         {type === 'voice' ? (
-          /* ── Voice (unchanged mock) ── */
           <div style={{ margin: 16, borderRadius: 12, background: 'var(--panel)', padding: '28px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, border: '1.5px solid var(--line-soft)' }}>
             <Wave active={recording || transcribing} />
             <button
@@ -287,8 +298,8 @@ function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'col
             >
               <Ic.mic width={26} height={26} />
             </button>
-            <span style={{ fontSize: 11, color: recording ? 'var(--red)' : 'var(--ink-faint)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-              {transcribing ? 'Transcribing…' : recording ? '● Recording…' : transcript ? 'Tap to re-record' : 'Tap to record'}
+            <span style={{ fontSize: 11, color: recording ? 'var(--red)' : voiceError ? 'var(--red)' : 'var(--ink-faint)', letterSpacing: '0.06em', textTransform: 'uppercase', textAlign: 'center' }}>
+              {transcribing ? 'Transcribing…' : recording ? '● Recording…' : voiceError ? voiceError : transcript ? 'Tap to re-record' : 'Tap to record'}
             </span>
           </div>
         ) : (
