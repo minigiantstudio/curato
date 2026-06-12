@@ -296,7 +296,6 @@ function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'col
               ref={inputRef}
               type="file"
               accept="image/*"
-              capture="environment"
               onChange={handleFileChange}
               style={{ display: 'none' }}
             />
@@ -340,7 +339,7 @@ function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'col
                 /* Empty state */
                 <>
                   <Ic.camera width={36} height={36} style={{ color: 'var(--ink-faint)' }} />
-                  <span style={{ fontSize: 11, color: 'var(--ink-faint)', letterSpacing: '0.04em' }}>Tap to capture</span>
+                  <span style={{ fontSize: 11, color: 'var(--ink-faint)', letterSpacing: '0.04em' }}>Take photo or upload</span>
                 </>
               )}
             </div>
