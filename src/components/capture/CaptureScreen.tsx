@@ -188,14 +188,11 @@ function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'col
   const [mediaFile, setMediaFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [recording, setRecording] = useState(false)
-  const [transcribing, setTranscribing] = useState(false)
   const [transcript, setTranscript] = useState('')
   const [voiceError, setVoiceError] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const previewUrlRef = useRef<string | null>(null)
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
-  const streamRef = useRef<MediaStream | null>(null)
-  const chunksRef = useRef<Blob[]>([])
+  const recognitionRef = useRef<SpeechRecognition | null>(null)
   const typeInfo = CAPTURE_TYPES.find(t => t.id === type)!
 
   // Auto-open camera on mount for photo/collection
@@ -205,11 +202,10 @@ function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'col
     }
   }, [type])
 
-  // Stop mic + revoke object URL on unmount
   useEffect(() => {
     return () => {
       if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current)
-      streamRef.current?.getTracks().forEach(t => t.stop())
+      recognitionRef.current?.abort()
     }
   }, [])
 
@@ -223,49 +219,41 @@ function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'col
     setPreviewUrl(url)
   }
 
-  async function startRecording() {
+  function startRecording() {
     setVoiceError('')
     setTranscript('')
     setContent('')
-    chunksRef.current = []
-    let stream: MediaStream
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-    } catch {
-      setVoiceError('Microphone access denied. Please allow mic access and try again.')
+    const w = window as typeof window & { webkitSpeechRecognition?: typeof SpeechRecognition }
+    const SpeechRec: typeof SpeechRecognition | undefined = window.SpeechRecognition ?? w.webkitSpeechRecognition
+    if (!SpeechRec) {
+      setVoiceError('Voice input not supported in this browser.')
       return
     }
-    streamRef.current = stream
-    const mr = new MediaRecorder(stream)
-    mediaRecorderRef.current = mr
-    mr.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data) }
-    mr.onstop = async () => {
-      stream.getTracks().forEach(t => t.stop())
-      streamRef.current = null
-      const mimeType = mr.mimeType || 'audio/webm'
-      const blob = new Blob(chunksRef.current, { type: mimeType })
-      setRecording(false)
-      setTranscribing(true)
-      try {
-        const fd = new FormData()
-        fd.append('audio', blob, mimeType.includes('mp4') ? 'recording.m4a' : 'recording.webm')
-        const res = await fetch('/api/transcribe', { method: 'POST', body: fd })
-        if (!res.ok) throw new Error('Transcription failed')
-        const { transcript: text } = await res.json() as { transcript: string }
-        setTranscript(text)
-        setContent(text)
-      } catch {
-        setVoiceError('Transcription failed. Tap to try again.')
-      } finally {
-        setTranscribing(false)
-      }
+    const recognition = new SpeechRec()
+    recognitionRef.current = recognition
+    recognition.continuous = true
+    recognition.interimResults = false
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      const text = Array.from(event.results).map(r => r[0].transcript).join(' ').trim()
+      setTranscript(text)
+      setContent(text)
     }
-    mr.start()
-    setRecording(true)
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      setVoiceError(event.error === 'not-allowed' ? 'Microphone access denied. Please allow mic access and try again.' : 'Transcription failed. Tap to try again.')
+      setRecording(false)
+    }
+    recognition.onend = () => { setRecording(false) }
+    try {
+      recognition.start()
+      setRecording(true)
+    } catch {
+      setVoiceError('Could not start recording. Try again.')
+    }
   }
 
   function stopRecording() {
-    mediaRecorderRef.current?.stop()
+    recognitionRef.current?.stop()
+    recognitionRef.current = null
   }
 
   const canProceed = type === 'voice' ? transcript.length > 0 : (mediaFile != null || content.length > 0)
@@ -282,24 +270,22 @@ function MediaCapture({ type, onBack, onNext }: { type: 'photo' | 'voice' | 'col
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
         {type === 'voice' ? (
           <div style={{ margin: 16, borderRadius: 12, background: 'var(--panel)', padding: '28px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, border: '1.5px solid var(--line-soft)' }}>
-            <Wave active={recording || transcribing} />
+            <Wave active={recording} />
             <button
-              onClick={() => { if (recording) { stopRecording() } else if (!transcribing) { void startRecording() } }}
-              disabled={transcribing}
+              onClick={() => { if (recording) { stopRecording() } else { startRecording() } }}
               style={{
                 width: 64, height: 64, borderRadius: 32,
                 background: recording ? 'var(--red)' : 'var(--violet)',
                 color: '#fff', border: 'none', display: 'flex',
-                alignItems: 'center', justifyContent: 'center', cursor: transcribing ? 'default' : 'pointer',
+                alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
                 animation: recording ? 'pulse 1.2s infinite' : 'none',
                 boxShadow: `0 6px 20px ${recording ? 'rgba(158,52,66,0.4)' : 'rgba(74,61,176,0.35)'}`,
-                opacity: transcribing ? 0.5 : 1,
               }}
             >
               <Ic.mic width={26} height={26} />
             </button>
             <span style={{ fontSize: 11, color: recording ? 'var(--red)' : voiceError ? 'var(--red)' : 'var(--ink-faint)', letterSpacing: '0.06em', textTransform: 'uppercase', textAlign: 'center' }}>
-              {transcribing ? 'Transcribing…' : recording ? '● Recording…' : voiceError ? voiceError : transcript ? 'Tap to re-record' : 'Tap to record'}
+              {recording ? '● Recording…' : voiceError ? voiceError : transcript ? 'Tap to re-record' : 'Tap to record'}
             </span>
           </div>
         ) : (
