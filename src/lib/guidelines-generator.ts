@@ -64,13 +64,21 @@ export async function fetchCapsuleData(capsuleId: string): Promise<RawCapsuleDat
   // Corpus: captures for this context (+ parent), deduped by id.
   let captures: RawCapture[] = []
   if (contextId) {
-    const { data: own, error: ownErr } = await supabase.from('captures').select('*').contains('context_ids', [contextId])
+    const CAPTURE_LIMIT = 1000
+    const { data: own, error: ownErr } = await supabase
+      .from('captures').select('*').contains('context_ids', [contextId]).limit(CAPTURE_LIMIT)
     if (ownErr) console.warn('fetchCapsuleData: own-captures fetch failed:', ownErr)
     captures = (own ?? []) as RawCapture[]
+    if (captures.length >= CAPTURE_LIMIT) {
+      console.warn(`fetchCapsuleData: own-captures hit the ${CAPTURE_LIMIT}-row cap; statistics may be truncated.`)
+    }
     if (parentContext) {
       const { data: parentCaps, error: parentErr } = await supabase
-        .from('captures').select('*').contains('context_ids', [parentContext.id])
+        .from('captures').select('*').contains('context_ids', [parentContext.id]).limit(CAPTURE_LIMIT)
       if (parentErr) console.warn('fetchCapsuleData: parent-captures fetch failed:', parentErr)
+      if ((parentCaps?.length ?? 0) >= CAPTURE_LIMIT) {
+        console.warn(`fetchCapsuleData: parent-captures hit the ${CAPTURE_LIMIT}-row cap; statistics may be truncated.`)
+      }
       const seen = new Set(captures.map(c => c.id))
       for (const c of (parentCaps ?? []) as RawCapture[]) if (!seen.has(c.id)) captures.push(c)
     }
