@@ -10,6 +10,9 @@ import { saveCapture, saveCaptureWithMedia, flushOfflineQueue } from '@/lib/capt
 import { getOrCreateAnonSession } from '@/lib/auth'
 import { triggerAgent } from '@/lib/agent'
 import type { CaptureType, Verdict, RuleVerb, CaptureInsert } from '@/types/capture'
+import { FocusContextStep, type FocusContextData } from './FocusContextStep'
+import { useFocus } from '@/components/focus'
+import type { Context } from '@/types/context'
 
 // ── State machine ─────────────────────────────────────────────
 type FlowStep = 'idle' | 'typeSheet' | 'capture' | 'context' | 'done'
@@ -37,6 +40,7 @@ export function useCaptureContext() {
 // ── Provider ──────────────────────────────────────────────────
 export function CaptureProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
+  const { focusedBrand } = useFocus()
   const [step, setStep] = useState<FlowStep>('idle')
   const [savedEntry, setSavedEntry] = useState<SavedEntry | null>(null)
   const flowData = useRef<FlowData>({})
@@ -104,6 +108,51 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
     setStep('done')
   }
 
+  // ── Focus mode: persist capture + optional linked rule ───────
+  async function persistFocusAndDone(data: FocusContextData, brand: Context) {
+    const { type, mediaFile } = flowData.current
+
+    let session = null
+    try { session = await getOrCreateAnonSession() } catch { /* offline */ }
+    await flushOfflineQueue()
+
+    // Primary capture row — tagged to the focused brand
+    const primary: CaptureInsert = {
+      type: type!,
+      content: data.take,
+      verdict: data.verdict,
+      domains: data.domain ? [data.domain] : undefined,
+      context_ids: [brand.id],
+    }
+    const saved = mediaFile
+      ? await saveCaptureWithMedia(primary, mediaFile, 'photos')
+      : await saveCapture(primary)
+
+    // Optional second linked rule row
+    if (data.rule) {
+      const ruleInsert: CaptureInsert = {
+        type: 'rule',
+        content: data.rule.text,
+        rule_verb: data.rule.verb,
+        domains: data.domain ? [data.domain] : undefined,
+        context_ids: [brand.id],
+      }
+      await saveCapture(ruleInsert)
+    }
+
+    if (saved && session?.user?.id) {
+      void triggerAgent(saved.id, session.user.id)
+    }
+    setSavedEntry({
+      type: type!,
+      content: data.take,
+      verdict: data.verdict,
+      domain: data.domain ?? '',
+      tags: [],
+    })
+    setStep('done')
+  }
+
   // ── Done screen actions ───────────────────────────────────────
   function onAgain() {
     flowData.current = {}
@@ -150,7 +199,16 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
               onNext={onCaptureNext}
             />
           )}
-          {step === 'context' && (
+          {step === 'context' && focusedBrand && (
+            <FocusContextStep
+              brand={focusedBrand}
+              type={type}
+              content={flowData.current.content ?? ''}
+              onBack={() => setStep('capture')}
+              onDone={data => { void persistFocusAndDone(data, focusedBrand) }}
+            />
+          )}
+          {step === 'context' && !focusedBrand && (
             <ContextStep
               type={type}
               content={flowData.current.content ?? ''}
