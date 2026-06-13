@@ -140,7 +140,7 @@ export default function ContextsPage() {
                   captureCount={counts[ctx.id] ?? 0}
                   parentName={null}
                   onClick={() => router.push(`/contexts/${ctx.id}`)}
-                  onFocus={() => { enterFocus(ctx); router.push('/feed') }}
+                  onEnterFocus={() => { enterFocus(ctx); router.push('/feed') }}
                 />
               ))}
             </div>
@@ -233,10 +233,10 @@ interface ContextCardProps {
   captureCount: number
   parentName: string | null
   onClick: () => void
-  onFocus?: () => void
+  onEnterFocus?: () => void
 }
 
-function ContextCard({ context, captureCount, parentName, onClick, onFocus }: ContextCardProps) {
+function ContextCard({ context, captureCount, parentName, onClick, onEnterFocus }: ContextCardProps) {
   return (
     <div
       onClick={onClick}
@@ -273,10 +273,11 @@ function ContextCard({ context, captureCount, parentName, onClick, onFocus }: Co
           }}>
             {context.type}
           </span>
-          {onFocus && (
+          {onEnterFocus && (
             <button
+              type="button"
               aria-label={`Focus on ${context.name}`}
-              onClick={e => { e.stopPropagation(); onFocus() }}
+              onClick={e => { e.stopPropagation(); onEnterFocus() }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
