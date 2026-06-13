@@ -15,7 +15,7 @@ export function formatAsMarkdown(intel: CapsuleIntelligence): string {
   const lines: string[] = []
   lines.push(`# ${m.title} — AI Guidelines`)
   lines.push('')
-  lines.push(`> ${m.declaration}`)
+  lines.push(`> ${m.declaration.replace(/\r?\n/g, ' ')}`)
   lines.push('')
   lines.push(`**Designer:** ${m.designerName}  `)
   lines.push(`**Version:** ${m.version}  `)
@@ -48,9 +48,10 @@ export function formatAsMarkdown(intel: CapsuleIntelligence): string {
 
   lines.push('## Domain map')
   const domainRows = Object.entries(intel.contextMap)
+  const escapePipe = (s: string) => s.replace(/\|/g, '\\|')
   lines.push('| Domain | Approved | Rejected | Rules |')
   lines.push('| --- | --- | --- | --- |')
-  for (const [d, v] of domainRows) lines.push(`| ${d} | ${v.approved} | ${v.rejected} | ${v.rules} |`)
+  for (const [d, v] of domainRows) lines.push(`| ${escapePipe(d)} | ${v.approved} | ${v.rejected} | ${v.rules} |`)
   if (!domainRows.length) lines.push('| — | 0 | 0 | 0 |')
   lines.push('')
 
@@ -72,7 +73,8 @@ export function formatAsMarkdown(intel: CapsuleIntelligence): string {
   }
 
   lines.push('---')
-  lines.push(`_Generated from Taste capsule ${m.capsuleId}. Unavailable fields: ${intel._unavailable.join(', ')}._`)
+  const unavail = intel._unavailable.length ? ` Unavailable fields: ${intel._unavailable.join(', ')}.` : ''
+  lines.push(`_Generated from Taste capsule ${m.capsuleId}.${unavail}_`)
   return lines.join('\n')
 }
 
@@ -112,7 +114,7 @@ export function formatAsText(intel: CapsuleIntelligence): string {
   if (intel.rejectionLog.representativeReasons.length) for (const r of intel.rejectionLog.representativeReasons) rule(`  - ${r}`)
   else rule('  - -')
   rule('')
-  rule(`(Unavailable: ${intel._unavailable.join(', ')})`)
+  if (intel._unavailable.length) rule(`(Unavailable: ${intel._unavailable.join(', ')})`)
   return out.join('\n')
 }
 
