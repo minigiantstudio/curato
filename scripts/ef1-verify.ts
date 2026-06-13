@@ -1,4 +1,5 @@
 import { processCapsuleData } from '@/lib/guidelines/process'
+import { formatAsMarkdown, formatAsText, formatAsJSON } from '@/lib/guidelines/format'
 import type { RawCapsuleData } from '@/types/guidelines'
 
 function assert(cond: boolean, msg: string) {
@@ -46,3 +47,20 @@ assert(intel.references.collections[0].name === 'Mood board', 'collection name =
 assert(intel._unavailable.includes('feeling.intensity'), 'unavailable provenance recorded')
 
 console.log('ef1-verify: processor OK')
+
+const md = formatAsMarkdown(intel)
+assert(md.includes('# Plural Café v1.2 — AI Guidelines'), 'markdown has title heading')
+assert(md.includes('Warmth earned through material reality.'), 'markdown includes declaration')
+assert(md.includes('### ALWAYS') && md.includes('warm neutral base'), 'markdown lists ALWAYS rule')
+assert(md.includes('| Color |'), 'markdown domain map row')
+
+const txt = formatAsText(intel)
+assert(txt.includes('AI GUIDELINES'), 'text header present')
+assert(txt.includes('ALWAYS:'), 'text rules section present')
+
+const json = formatAsJSON(intel)
+assert(json.specVersion === '1.0' && typeof json.generatedAt === 'string', 'json envelope present')
+assert(json.meta.capsuleId === 'cap-1', 'json carries intelligence')
+assert(Array.isArray(json._unavailable), 'json keeps provenance')
+
+console.log('ef1-verify: formatters OK')
