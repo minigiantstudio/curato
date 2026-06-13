@@ -1,4 +1,4 @@
-import { DOMAINS, FEELING_MOODS } from '@/types/capture'
+import { FEELING_MOODS } from '@/types/capture'
 import type {
   RawCapsuleData, RawCapture, CapsuleIntelligence,
   TagFrequency, ProcessedRule, ProcessedFeeling, ProcessedCollection, RuleVerb,
@@ -88,10 +88,11 @@ export function processCapsuleData(
     return contextMap[d]
   }
   for (const c of captures) {
+    if (c.verdict !== 'keep' && c.verdict !== 'reject') continue
     for (const d of c.domains ?? []) {
       const bucket = ensureDomain(d)
       if (c.verdict === 'keep') bucket.approved++
-      else if (c.verdict === 'reject') bucket.rejected++
+      else bucket.rejected++
     }
   }
   for (const r of capsule.rules ?? []) {
@@ -101,6 +102,7 @@ export function processCapsuleData(
   // ── antiSlopScore: selectivity ──
   const verdictTotal = approved.length + rejected.length
   const antiSlopScore = verdictTotal === 0 ? null : Math.round((100 * rejected.length) / verdictTotal)
+  const rejectedTags = topTags(rejected, 6)
 
   // ── references ──
   const topImages = captures
@@ -109,7 +111,7 @@ export function processCapsuleData(
     .map(c => ({ id: c.id, path: c.media_url as string, tags: c.tags ?? [] }))
   const collections: ProcessedCollection[] = captures
     .filter(c => c.type === 'collection')
-    .map(c => ({ name: (c.content.split('\n')[0] || c.content).trim(), intent: null, moodTags: [] }))
+    .map(c => ({ name: (c.content.split('\n').find(l => l.trim()) ?? '').trim(), intent: null, moodTags: [] }))
 
   // ── meta ──
   const trainingDays = new Set(captures.map(c => c.created_at.slice(0, 10))).size
@@ -126,7 +128,7 @@ export function processCapsuleData(
     },
     aestheticProfile: {
       approvedTags: topTags(approved, 8),
-      rejectedTags: topTags(rejected, 6),
+      rejectedTags,
       moodProfile,
       antiSlopScore,
     },
@@ -139,11 +141,11 @@ export function processCapsuleData(
     feelings: {
       descriptions: feelingCaptures.map(c => c.content),
       intensityWeighted: feelings,
-      topMoods: moodProfile,
+      topMoods: [...moodProfile],
     },
     contextMap,
     rejectionLog: {
-      topPatterns: topTags(rejected, 6),
+      topPatterns: rejectedTags,
       representativeReasons: rejected.map(c => c.content).filter(Boolean).slice(0, 5),
     },
     references: { topImages, collections },
