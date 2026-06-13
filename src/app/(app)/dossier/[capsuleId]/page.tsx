@@ -6,6 +6,7 @@ import { getCapsuleById, updateCapsulePublic } from '@/lib/capsule'
 import { getContextWithParent } from '@/lib/contexts'
 import { DossierDocument, type DossierTheme } from '@/components/dossier/DossierDocument'
 import { Ic } from '@/components/icons'
+import { ExportGuidelinesSheet } from '@/components/dossier/ExportGuidelinesSheet'
 import type { Capsule } from '@/types/capsule'
 import type { Context } from '@/types/context'
 
@@ -26,6 +27,7 @@ export default function DossierScreen({ params }: PageProps) {
   const [theme, setTheme] = useState<DossierTheme>('paper')
   const [isPublic, setIsPublic] = useState(false)
   const [copyFeedback, setCopyFeedback] = useState(false)
+  const [exportOpen, setExportOpen] = useState(false)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -119,6 +121,19 @@ export default function DossierScreen({ params }: PageProps) {
           {context.name} {capsule.version}
         </span>
 
+        {/* Export guidelines */}
+        <button
+          onClick={() => setExportOpen(true)}
+          style={{
+            padding: '5px 12px', borderRadius: 6,
+            background: 'var(--panel)', border: '1px solid var(--line)',
+            color: 'var(--ink-faint)', fontSize: 10, fontFamily: 'var(--mono)',
+            cursor: 'pointer', letterSpacing: '0.06em',
+          }}
+        >
+          Export
+        </button>
+
         {/* Public toggle */}
         <button
           onClick={handlePublicToggle}
@@ -163,6 +178,14 @@ export default function DossierScreen({ params }: PageProps) {
           onExportPDF={handleExportPDF}
         />
       </div>
+
+      {exportOpen && (
+        <ExportGuidelinesSheet
+          capsuleId={capsule.id}
+          filenameSlug={`${context.name}-${capsule.version}`}
+          onClose={() => setExportOpen(false)}
+        />
+      )}
     </div>
   )
 }
