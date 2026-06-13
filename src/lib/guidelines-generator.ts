@@ -1,5 +1,5 @@
 // Server-only: uses the Supabase service-role key. Never import this module from a client component.
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createClient as createSupabaseClient, type SupabaseClient } from '@supabase/supabase-js'
 import { processCapsuleData } from '@/lib/guidelines/process'
 import { formatAsMarkdown, formatAsText, formatAsJSON } from '@/lib/guidelines/format'
 import type {
@@ -28,8 +28,11 @@ function createServiceClient() {
  * @param capsuleId  capsules.id
  * @returns RawCapsuleData, or null if the capsule cannot be found.
  */
-export async function fetchCapsuleData(capsuleId: string): Promise<RawCapsuleData | null> {
-  const supabase = createServiceClient()
+/** Options for the read functions. Inject `supabase` to use an authed client (RLS-scoped). */
+export interface FetchOpts { supabase?: SupabaseClient }
+
+export async function fetchCapsuleData(capsuleId: string, opts?: FetchOpts): Promise<RawCapsuleData | null> {
+  const supabase = opts?.supabase ?? createServiceClient()
 
   const { data: capsuleRow, error: capsuleErr } = await supabase
     .from('capsules').select('*').eq('id', capsuleId).single()
@@ -106,8 +109,9 @@ export async function fetchCapsuleData(capsuleId: string): Promise<RawCapsuleDat
 export async function generateGuidelines(
   capsuleId: string,
   formats: GuidelinesFormat[] = ['markdown', 'text', 'json'],
+  opts?: FetchOpts,
 ): Promise<GuidelinesOutput> {
-  const raw = await fetchCapsuleData(capsuleId)
+  const raw = await fetchCapsuleData(capsuleId, opts)
   if (!raw) throw new Error(`Capsule not found: ${capsuleId}`)
 
   const intel = processCapsuleData(raw)
