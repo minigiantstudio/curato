@@ -9,6 +9,20 @@ Art Director capture and taste synthesis tool. See TASTE_PHASES.md for architect
 ## Current Phase
 Phase 6 (Dossier) — COMPLETE
 
+Brand Focus Mode — COMPLETE
+Session-only "pin a brand" mode that streamlines capturing into one brand's brandkit.
+Components built:
+- `src/components/focus/FocusProvider.tsx` — session-only `focusedBrand` context (sessionStorage key `taste.focusedBrand`; clears on tab close)
+- `src/components/focus/FocusBar.tsx` — minimal violet bar on Feed (brand name + Exit)
+- `src/components/focus/index.ts` — barrel (`FocusProvider`, `useFocus`, `FocusBar`)
+- `src/components/capture/FocusContextStep.tsx` — streamlined context screen: pre-filled brand chip, "Is this {brand}?" verdict (keep/reject), inline optional rule, domain, take
+- `src/components/icons.tsx` — added `Ic.focus` (target) icon
+- `src/app/(app)/contexts/page.tsx` — brand cards gain a focus button (`onEnterFocus`) → enter focus, route to /feed
+- `src/app/(app)/layout.tsx` — `FocusProvider` wraps `CaptureProvider`
+- `src/app/(app)/feed/page.tsx` — renders `FocusBar`
+- `src/components/capture/CaptureProvider.tsx` — renders FocusContextStep when focused; `persistFocusAndDone` dual-row save (primary capture + optional independent `rule` capture), both tagged via `context_ids:[brand.id]`; reaction fast-path also attaches the focused brand
+- No DB migration; reuses existing schema
+
 Phase 5 (Capsule Generation) — COMPLETE
 Phase 5 components built:
 - `src/types/capsule.ts` — Capsule, DistilledRule, CapsuleDiffResult types
