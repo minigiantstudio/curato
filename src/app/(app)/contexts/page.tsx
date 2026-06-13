@@ -279,19 +279,23 @@ function ContextCard({ context, captureCount, parentName, onClick, onEnterFocus 
               aria-label={`Focus on ${context.name}`}
               onClick={e => { e.stopPropagation(); onEnterFocus() }}
               style={{
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
-                justifyContent: 'center',
-                width: 28,
+                gap: 5,
                 height: 28,
-                borderRadius: 8,
-                border: '1px solid var(--violet)',
-                background: 'rgba(74,61,176,0.07)',
-                color: 'var(--violet)',
+                padding: '0 11px',
+                borderRadius: 20,
+                border: 'none',
+                background: 'var(--violet)',
+                color: '#fff',
+                fontSize: 11,
+                fontFamily: 'var(--mono)',
+                letterSpacing: '0.04em',
                 cursor: 'pointer',
               }}
             >
-              <Ic.focus width={16} height={16} />
+              <Ic.focus width={14} height={14} />
+              Focus
             </button>
           )}
         </div>
