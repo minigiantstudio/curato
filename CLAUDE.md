@@ -9,6 +9,14 @@ Art Director capture and taste synthesis tool. See TASTE_PHASES.md for architect
 ## Current Phase
 Phase 6 (Dossier) — COMPLETE
 
+EF-2 Export Guidelines — COMPLETE
+Owner-only download of a capsule's AI guidelines from the Dossier screen.
+- `src/app/api/guidelines/[capsuleId]/route.ts` — GET ?format=markdown|text|json; authed server client (RLS owner-scoped); Content-Disposition attachment; 404 when capsule not found/owned; sanitized error bodies
+- `src/components/dossier/ExportGuidelinesSheet.tsx` — Sheet with 3 format rows → fetch → blob download
+- `src/app/(app)/dossier/[capsuleId]/page.tsx` — Export button in the toolbar (before Public toggle)
+- `src/lib/guidelines-generator.ts` — fetchCapsuleData/generateGuidelines accept an optional injected supabase client (FetchOpts); default = service client (EF-1 path unchanged)
+No new deps; no service-role key in this path.
+
 EF-1 AI Guidelines Generator — COMPLETE
 Given a capsuleId, reads the training corpus and emits Markdown / plain text /
 Open-Capsule-Spec JSON. Library only (no UI).
