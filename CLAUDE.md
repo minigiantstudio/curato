@@ -9,6 +9,20 @@ Art Director capture and taste synthesis tool. See TASTE_PHASES.md for architect
 ## Current Phase
 Phase 6 (Dossier) — COMPLETE
 
+EF-1 AI Guidelines Generator — COMPLETE
+Given a capsuleId, reads the training corpus and emits Markdown / plain text /
+Open-Capsule-Spec JSON. Library only (no UI).
+- `src/types/guidelines.ts` — RawCapsuleData, CapsuleIntelligence, outputs
+- `src/lib/guidelines/process.ts` — processCapsuleData (pure)
+- `src/lib/guidelines/format.ts` — formatAsMarkdown/Text/JSON (pure)
+- `src/lib/guidelines-generator.ts` — fetchCapsuleData (service client, server-only) + generateGuidelines orchestrator
+- `scripts/ef1-verify.ts` — fixture verification (`npx tsx scripts/ef1-verify.ts`)
+Schema-reconciled: verdict 'keep'=approved; feeling moods parsed from the
+"{mood} — {text}" content prefix; contextMap keyed by DOMAIN; antiSlopScore =
+selectivity (round(100*rejected/(approved+rejected))); unavailable fields
+(weight/intensity/strength/contextCondition) tracked in CapsuleIntelligence._unavailable.
+No schema migration. Corpus = captures for the capsule's context (+ parent), deduped.
+
 Brand Focus Mode — COMPLETE
 Session-only "pin a brand" mode that streamlines capturing into one brand's brandkit.
 Components built:
