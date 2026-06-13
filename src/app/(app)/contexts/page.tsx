@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { getContexts, getCaptureCounts } from '@/lib/contexts'
 import { CreateContextSheet } from '@/components/contexts/CreateContextSheet'
 import type { Context } from '@/types/context'
+import { Ic } from '@/components/icons'
+import { useFocus } from '@/components/focus'
 
 function formatDate(iso: string): string {
   const d = new Date(iso)
@@ -14,6 +16,7 @@ function formatDate(iso: string): string {
 
 export default function ContextsPage() {
   const router = useRouter()
+  const { enterFocus } = useFocus()
   const [contexts, setContexts] = useState<Context[]>([])
   const [counts, setCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
@@ -137,6 +140,7 @@ export default function ContextsPage() {
                   captureCount={counts[ctx.id] ?? 0}
                   parentName={null}
                   onClick={() => router.push(`/contexts/${ctx.id}`)}
+                  onFocus={() => { enterFocus(ctx); router.push('/feed') }}
                 />
               ))}
             </div>
@@ -229,9 +233,10 @@ interface ContextCardProps {
   captureCount: number
   parentName: string | null
   onClick: () => void
+  onFocus?: () => void
 }
 
-function ContextCard({ context, captureCount, parentName, onClick }: ContextCardProps) {
+function ContextCard({ context, captureCount, parentName, onClick, onFocus }: ContextCardProps) {
   return (
     <div
       onClick={onClick}
@@ -255,18 +260,40 @@ function ContextCard({ context, captureCount, parentName, onClick }: ContextCard
         }}>
           {context.name}
         </span>
-        <span style={{
-          fontSize: 9,
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          color: context.type === 'brand' ? 'var(--violet)' : 'var(--ink-faint)',
-          background: context.type === 'brand' ? 'rgba(74,61,176,0.07)' : 'var(--panel)',
-          padding: '2px 7px',
-          borderRadius: 4,
-          border: `1px solid ${context.type === 'brand' ? 'var(--violet)' : 'var(--line-soft)'}`,
-        }}>
-          {context.type}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{
+            fontSize: 9,
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            color: context.type === 'brand' ? 'var(--violet)' : 'var(--ink-faint)',
+            background: context.type === 'brand' ? 'rgba(74,61,176,0.07)' : 'var(--panel)',
+            padding: '2px 7px',
+            borderRadius: 4,
+            border: `1px solid ${context.type === 'brand' ? 'var(--violet)' : 'var(--line-soft)'}`,
+          }}>
+            {context.type}
+          </span>
+          {onFocus && (
+            <button
+              aria-label={`Focus on ${context.name}`}
+              onClick={e => { e.stopPropagation(); onFocus() }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 28,
+                height: 28,
+                borderRadius: 8,
+                border: '1px solid var(--violet)',
+                background: 'rgba(74,61,176,0.07)',
+                color: 'var(--violet)',
+                cursor: 'pointer',
+              }}
+            >
+              <Ic.focus width={16} height={16} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Parent brand (projects only) */}
