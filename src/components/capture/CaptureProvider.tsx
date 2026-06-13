@@ -93,7 +93,9 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
       rule_verb: ruleVerb,
       tags: ctx?.tags,
       domains: ctx?.domain ? [ctx.domain] : undefined,
-      context_ids: [],
+      // Attach the focused brand when in focus mode (e.g. the reaction fast-path
+      // that skips the context step); empty otherwise.
+      context_ids: focusedBrand ? [focusedBrand.id] : [],
     }
 
     // Upload photo if present, otherwise plain save
@@ -128,7 +130,9 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
       ? await saveCaptureWithMedia(primary, mediaFile, 'photos')
       : await saveCapture(primary)
 
-    // Optional second linked rule row
+    // Optional rule row. This is an independent capture (a standalone rule tagged
+    // to the same brand), not a child of the primary row — so it is saved regardless
+    // of whether the primary save succeeded or was queued offline; both flush later.
     if (data.rule) {
       const ruleInsert: CaptureInsert = {
         type: 'rule',
@@ -140,6 +144,8 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
       await saveCapture(ruleInsert)
     }
 
+    // Agent processes the primary capture only; the rule row is linked context,
+    // not a trigger target.
     if (saved && session?.user?.id) {
       void triggerAgent(saved.id, session.user.id)
     }
