@@ -15,6 +15,7 @@ export interface FocusContextData {
 
 interface FocusContextStepProps {
   brand: Context
+  /** Accepted for call-site symmetry with ContextStep; not used in rendering yet. */
   type: CaptureType
   content: string
   onBack: () => void
@@ -60,7 +61,7 @@ export function FocusContextStep({ brand, content, onBack, onDone }: FocusContex
           <div className="label" style={{ marginBottom: 8 }}>Is this {brand.name}?</div>
           <div style={{ display: 'flex', gap: 10 }}>
             <button
-              onClick={() => setVerdict('keep')}
+              onClick={() => setVerdict(v => v === 'keep' ? null : 'keep')}
               style={{
                 flex: 1, borderRadius: 12, padding: '13px', fontSize: 14, fontWeight: 600, cursor: 'pointer',
                 border: '2px solid var(--green)',
@@ -71,7 +72,7 @@ export function FocusContextStep({ brand, content, onBack, onDone }: FocusContex
               ◎ Good example
             </button>
             <button
-              onClick={() => setVerdict('reject')}
+              onClick={() => setVerdict(v => v === 'reject' ? null : 'reject')}
               style={{
                 flex: 1, borderRadius: 12, padding: '13px', fontSize: 14, fontWeight: 600, cursor: 'pointer',
                 border: '2px solid var(--red)',
@@ -114,6 +115,7 @@ export function FocusContextStep({ brand, content, onBack, onDone }: FocusContex
                 onChange={e => setRuleText(e.target.value)}
                 rows={2}
                 placeholder="state the rule clearly…"
+                aria-label="Rule text"
                 style={{ resize: 'none', background: 'var(--cream-2)', border: '1.5px solid var(--line-soft)', borderRadius: 8, color: 'var(--ink)', fontSize: 13, padding: '10px 12px', lineHeight: 1.5 }}
               />
             </div>
@@ -138,6 +140,7 @@ export function FocusContextStep({ brand, content, onBack, onDone }: FocusContex
             onChange={e => setTake(e.target.value)}
             rows={3}
             placeholder="What does it feel like, exactly?"
+            aria-label="Your take"
             style={{ resize: 'none', background: 'var(--cream-2)', border: '1.5px solid var(--line-soft)', borderRadius: 8, color: 'var(--ink)', fontSize: 13, padding: '11px 13px', lineHeight: 1.55 }}
           />
         </div>
@@ -152,7 +155,7 @@ export function FocusContextStep({ brand, content, onBack, onDone }: FocusContex
             width: '100%', padding: '15px', borderRadius: 12,
             background: canSave ? 'var(--violet)' : 'var(--panel)',
             color: canSave ? '#fff' : 'var(--ink-faint)',
-            fontSize: 13, letterSpacing: '0.04em',
+            fontSize: 13, letterSpacing: '0.04em', fontFamily: 'var(--mono)',
             cursor: canSave ? 'pointer' : 'default',
             border: 'none',
             transition: 'background .2s, color .2s',
