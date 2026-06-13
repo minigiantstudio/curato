@@ -19,18 +19,19 @@ function createServiceClient() {
   return createSupabaseClient(url, key)
 }
 
+/** Options for the read functions. Inject `supabase` to use an authed client (RLS-scoped). */
+export interface FetchOpts { supabase?: SupabaseClient }
+
 /**
  * STEP 1 — Read the full training corpus for a capsule from Supabase.
  * Resolves the capsule, its context (+ parent), every capture tagged to that
  * context (unioned with the parent context's captures, deduped), and a
- * context_id→name map. Server-only; uses the service client.
+ * context_id→name map. Server-only; uses the service client by default.
  *
  * @param capsuleId  capsules.id
+ * @param opts.supabase  inject an authed client to scope reads by RLS
  * @returns RawCapsuleData, or null if the capsule cannot be found.
  */
-/** Options for the read functions. Inject `supabase` to use an authed client (RLS-scoped). */
-export interface FetchOpts { supabase?: SupabaseClient }
-
 export async function fetchCapsuleData(capsuleId: string, opts?: FetchOpts): Promise<RawCapsuleData | null> {
   const supabase = opts?.supabase ?? createServiceClient()
 

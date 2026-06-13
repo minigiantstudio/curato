@@ -12,6 +12,11 @@ const ROWS: { fmt: Fmt; label: string; sub: string }[] = [
 ]
 const EXT: Record<Fmt, string> = { markdown: 'md', text: 'txt', json: 'json' }
 
+/** Match the server's slugify so the blob-download filename is clean (object URLs drop Content-Disposition). */
+function slugify(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'capsule'
+}
+
 interface Props {
   capsuleId: string
   filenameSlug: string
@@ -34,7 +39,7 @@ export function ExportGuidelinesSheet({ capsuleId, filenameSlug, onClose }: Prop
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `${filenameSlug}-guidelines.${EXT[fmt]}`
+      a.download = `${slugify(filenameSlug)}-guidelines.${EXT[fmt]}`
       document.body.appendChild(a)
       a.click()
       a.remove()
