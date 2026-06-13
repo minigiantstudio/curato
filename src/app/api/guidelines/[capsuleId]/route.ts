@@ -30,7 +30,7 @@ export async function GET(
     const out = await generateGuidelines(capsuleId, [format], { supabase })
 
     const body =
-      format === 'json' ? JSON.stringify(out.json, null, 2)
+      format === 'json' ? JSON.stringify(out.json ?? {}, null, 2)
       : format === 'text' ? (out.text ?? '')
       : (out.markdown ?? '')
 
@@ -44,7 +44,11 @@ export async function GET(
     })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
-    const status = msg.startsWith('Capsule not found') ? 404 : 500
-    return NextResponse.json({ error: msg }, { status })
+    const notFound = msg.startsWith('Capsule not found')
+    if (!notFound) console.error('guidelines export failed:', msg)
+    return NextResponse.json(
+      { error: notFound ? 'Capsule not found' : 'Export failed' },
+      { status: notFound ? 404 : 500 },
+    )
   }
 }
