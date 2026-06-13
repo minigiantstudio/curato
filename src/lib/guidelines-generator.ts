@@ -1,3 +1,4 @@
+// Server-only: uses the Supabase service-role key. Never import this module from a client component.
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { processCapsuleData } from '@/lib/guidelines/process'
 import { formatAsMarkdown, formatAsText, formatAsJSON } from '@/lib/guidelines/format'
@@ -11,6 +12,9 @@ export { formatAsMarkdown, formatAsText, formatAsJSON } from '@/lib/guidelines/f
 /** Service-role Supabase client (server-only; bypasses anon RLS like capsule/generate). */
 function createServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.warn('fetchCapsuleData: SUPABASE_SERVICE_ROLE_KEY not set; falling back to anon key (RLS-limited reads).')
+  }
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   return createSupabaseClient(url, key)
 }
@@ -38,7 +42,8 @@ export async function fetchCapsuleData(capsuleId: string): Promise<RawCapsuleDat
   const contextNames: Record<string, string> = {}
 
   if (contextId) {
-    const { data: ctx } = await supabase.from('contexts').select('*').eq('id', contextId).single()
+    const { data: ctx, error: ctxErr } = await supabase.from('contexts').select('*').eq('id', contextId).single()
+    if (ctxErr) console.warn('fetchCapsuleData: context fetch failed:', ctxErr)
     if (ctx) {
       context = {
         id: ctx.id, name: ctx.name, type: ctx.type,
@@ -59,11 +64,13 @@ export async function fetchCapsuleData(capsuleId: string): Promise<RawCapsuleDat
   // Corpus: captures for this context (+ parent), deduped by id.
   let captures: RawCapture[] = []
   if (contextId) {
-    const { data: own } = await supabase.from('captures').select('*').contains('context_ids', [contextId])
+    const { data: own, error: ownErr } = await supabase.from('captures').select('*').contains('context_ids', [contextId])
+    if (ownErr) console.warn('fetchCapsuleData: own-captures fetch failed:', ownErr)
     captures = (own ?? []) as RawCapture[]
     if (parentContext) {
-      const { data: parentCaps } = await supabase
+      const { data: parentCaps, error: parentErr } = await supabase
         .from('captures').select('*').contains('context_ids', [parentContext.id])
+      if (parentErr) console.warn('fetchCapsuleData: parent-captures fetch failed:', parentErr)
       const seen = new Set(captures.map(c => c.id))
       for (const c of (parentCaps ?? []) as RawCapture[]) if (!seen.has(c.id)) captures.push(c)
     }
