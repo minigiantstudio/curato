@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { CaptureProvider } from '@/components/capture'
+import { FocusProvider } from '@/components/focus'
 import { FAB } from '@/components/FAB'
 import { SyncIndicator } from '@/components/SyncIndicator'
 
@@ -59,13 +60,15 @@ function BottomNav() {
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <CaptureProvider>
-      <div style={{ position: 'relative', height: '100%', overflow: 'hidden', paddingBottom: 'calc(52px + env(safe-area-inset-bottom))' }}>
-        {children}
-        <FAB />
-        <SyncIndicator />
-        <BottomNav />
-      </div>
-    </CaptureProvider>
+    <FocusProvider>
+      <CaptureProvider>
+        <div style={{ position: 'relative', height: '100%', overflow: 'hidden', paddingBottom: 'calc(52px + env(safe-area-inset-bottom))' }}>
+          {children}
+          <FAB />
+          <SyncIndicator />
+          <BottomNav />
+        </div>
+      </CaptureProvider>
+    </FocusProvider>
   )
 }

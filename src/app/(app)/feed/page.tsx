@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { FeedCard } from '@/components/feed/FeedCard'
 import { AgentTriageStrip } from '@/components/feed/AgentTriageStrip'
+import { FocusBar } from '@/components/focus'
 import { getTodayCaptures, subscribeToTodayCaptures, acceptAgentSuggestion, acceptAllSuggestions } from '@/lib/captures'
 import { getContexts } from '@/lib/contexts'
 import { AssignContextSheet } from '@/components/contexts/AssignContextSheet'
@@ -82,6 +83,7 @@ export default function FeedPage() {
 
   return (
     <div className="screen-in" style={{ height: '100%', overflowY: 'auto', background: 'var(--cream)' }}>
+      <FocusBar />
       {/* Header */}
       <div
         style={{
