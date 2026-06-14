@@ -8,18 +8,12 @@ export function createClient() {
 }
 
 /**
- * Returns the current user, signing in anonymously if no session exists.
- * Call this before any write operation that requires auth.uid() in RLS.
+ * Returns the current authenticated user, or null if not signed in.
+ * Routes are gated by middleware, so app-route callers always have a user;
+ * a null here means the caller should fall back to the offline queue.
  */
 export async function getOrCreateSession() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (user) return user
-
-  const { data, error } = await supabase.auth.signInAnonymously()
-  if (error) {
-    console.error('getOrCreateSession: anon sign-in failed', error)
-    return null
-  }
-  return data.user
+  return user ?? null
 }

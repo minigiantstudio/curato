@@ -1,11 +1,11 @@
 import { createClient } from '@/lib/supabase'
 
+/**
+ * Returns the current session, or null if not signed in.
+ * (Anonymous sign-in was removed in favour of magic-link auth.)
+ */
 export async function getOrCreateAnonSession() {
   const supabase = createClient()
   const { data: { session } } = await supabase.auth.getSession()
-  if (session) return session
-
-  const { data, error } = await supabase.auth.signInAnonymously()
-  if (error) throw new Error(`Auth failed: ${error.message}`)
-  return data.session
+  return session
 }
