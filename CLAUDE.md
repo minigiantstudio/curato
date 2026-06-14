@@ -9,6 +9,18 @@ Art Director capture and taste synthesis tool. See TASTE_PHASES.md for architect
 ## Current Phase
 Phase 6 (Dossier) — COMPLETE
 
+Magic-Link Auth — COMPLETE
+Hard-gated email magic-link sign-in (anonymous auth removed).
+- `src/middleware.ts` — refreshes the Supabase session cookie every request + redirects unauthenticated app-route requests to /login (fixes data disappearing on refresh). MUST live in src/ (not repo root) for Next to register it with this src/-based app.
+- `src/app/login/page.tsx` — request a magic link (signInWithOtp); reads ?error via window.location (no useSearchParams → no Suspense requirement)
+- `src/app/auth/callback/route.ts` — exchangeCodeForSession → /feed
+- `src/lib/supabase.ts` / `src/lib/auth.ts` — session helpers return current user/session; no signInAnonymously
+- `src/app/(app)/contexts/page.tsx` — signed-in email + Sign out
+- `src/app/api/capsule/generate/route.ts` + `src/app/api/transcribe/route.ts` — now require an authenticated session (401 otherwise); they're excluded from the gate so they self-guard
+Public (un-gated): /login, /auth/*, /share/*, /api/* (self-guarded), static assets.
+RLS unchanged (auth.uid()). Pre-auth anonymous data remains orphaned.
+REQUIRES Supabase dashboard config: enable Email provider; set Site URL; add <origin>/auth/callback to redirect allowlist.
+
 EF-2 Export Guidelines — COMPLETE
 Owner-only download of a capsule's AI guidelines from the Dossier screen.
 - `src/app/api/guidelines/[capsuleId]/route.ts` — GET ?format=markdown|text|json; authed server client (RLS owner-scoped); Content-Disposition attachment; 404 when capsule not found/owned; sanitized error bodies
