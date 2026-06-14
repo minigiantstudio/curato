@@ -31,6 +31,7 @@ export async function middleware(request: NextRequest) {
   if (!user) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
+    url.search = ''
     return NextResponse.redirect(url)
   }
 
@@ -43,6 +44,6 @@ export const config = {
   // /auth/*), the public share route, API routes (they enforce their own RLS),
   // and static asset files.
   matcher: [
-    '/((?!_next/static|_next/image|login|auth|share|api|favicon.ico|manifest.json|.*\\.(?:png|jpg|jpeg|svg|otf|woff|woff2|ico)).*)',
+    '/((?!_next/static|_next/image|login(?:/|$)|auth(?:/|$)|share(?:/|$)|api(?:/|$)|favicon\\.ico|manifest\\.json|.*\\.(?:png|jpg|jpeg|svg|otf|woff|woff2|ico)).*)',
   ],
 }

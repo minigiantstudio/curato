@@ -4,6 +4,7 @@ import { getCapsule, saveCapsule, nextVersion } from '@/lib/capsule'
 import type { Capture } from '@/types/capture'
 import type { Context } from '@/types/context'
 import type { DistilledRule } from '@/types/capsule'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 
 function createServiceClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -42,6 +43,14 @@ async function callClaude(prompt: string): Promise<string> {
 
 export async function POST(req: NextRequest) {
   try {
+    // Auth guard: this route is excluded from the middleware gate and uses the
+    // service-role key, so it must verify the caller has a session.
+    const authed = await createServerSupabaseClient()
+    const { data: { user } } = await authed.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const body = await req.json() as { contextId?: string }
     const { contextId } = body
 

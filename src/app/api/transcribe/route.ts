@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 
 const CLAUDE_API_KEY = process.env.ANTHROPIC_API_KEY
 
 export async function POST(req: NextRequest) {
+  const authed = await createServerSupabaseClient()
+  const { data: { user } } = await authed.auth.getUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   if (!CLAUDE_API_KEY) {
     return NextResponse.json({ error: 'ANTHROPIC_API_KEY not set' }, { status: 500 })
   }
