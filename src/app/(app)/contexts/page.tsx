@@ -7,6 +7,7 @@ import { CreateContextSheet } from '@/components/contexts/CreateContextSheet'
 import type { Context } from '@/types/context'
 import { Ic } from '@/components/icons'
 import { useFocus } from '@/components/focus'
+import { createClient } from '@/lib/supabase'
 
 function formatDate(iso: string): string {
   const d = new Date(iso)
@@ -17,6 +18,17 @@ function formatDate(iso: string): string {
 export default function ContextsPage() {
   const router = useRouter()
   const { enterFocus } = useFocus()
+  const [email, setEmail] = useState<string | null>(null)
+
+  useEffect(() => {
+    createClient().auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null))
+  }, [])
+
+  async function handleSignOut() {
+    await createClient().auth.signOut()
+    router.push('/login')
+  }
+
   const [contexts, setContexts] = useState<Context[]>([])
   const [counts, setCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
@@ -73,6 +85,25 @@ export default function ContextsPage() {
         <p style={{ fontSize: 11, color: 'var(--ink-faint)', marginTop: 4, letterSpacing: '0.02em' }}>
           Brands and projects for your captures
         </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
+          {email && (
+            <span style={{ fontSize: 10, color: 'var(--ink-faint)', fontFamily: 'var(--mono)' }}>
+              {email}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={handleSignOut}
+            style={{
+              marginLeft: 'auto', padding: '4px 11px', borderRadius: 20,
+              background: 'var(--panel)', border: '1px solid var(--line)',
+              color: 'var(--ink-faint)', fontSize: 10, fontFamily: 'var(--mono)',
+              cursor: 'pointer', letterSpacing: '0.04em',
+            }}
+          >
+            Sign out
+          </button>
+        </div>
       </div>
 
       <div style={{ padding: '16px 20px 100px' }}>
