@@ -122,3 +122,134 @@ export async function generateGuidelines(
   if (formats.includes('json')) out.json = formatAsJSON(intel)
   return out
 }
+
+// ─────────────────────────────────────────────────────────────────
+// Stats data fetcher
+//
+// Schema mapping (the original spec used fields that don't exist in this DB —
+// these are the real-schema equivalents you confirmed):
+//   approved entries     → captures with verdict = 'keep'   (no 'approve' exists)
+//   rejected entries     → captures with verdict = 'reject'
+//   patternTag           → each capture's tags[]            (no patternTag column)
+//   patternTag==='ai-slop' → the literal tag 'ai-slop' in tags[]
+//   createdAt            → created_at (snake_case)
+//   "entries for a capsule" → captures in the capsule's context (entries live on
+//                             the context; a capsule is generated from that context)
+// Named fetchCapsuleStats (not fetchCapsuleData) so the existing fetchCapsuleData —
+// which powers the live /api/guidelines export route — keeps its RawCapsuleData shape.
+// ─────────────────────────────────────────────────────────────────
+
+export interface ApprovedTagStat {
+  tag: string
+  count: number
+  /** count / (count + rejected occurrences of the same tag); 0–1, 2 decimals. */
+  approvalRate: number
+}
+
+export interface RejectionPatternStat {
+  tag: string
+  count: number
+}
+
+export interface CapsuleStats {
+  approvedTags: ApprovedTagStat[]      // top 8 by count
+  rejectionPatterns: RejectionPatternStat[] // top 6 by count
+  antiSlopScore: number
+  trainingDays: number
+}
+
+interface StatRow {
+  tags: string[] | null
+  created_at: string
+}
+
+/** Count tag occurrences across a set of rows. */
+function tallyTags(rows: StatRow[]): Map<string, number> {
+  const counts = new Map<string, number>()
+  for (const r of rows) {
+    for (const t of r.tags ?? []) counts.set(t, (counts.get(t) ?? 0) + 1)
+  }
+  return counts
+}
+
+/**
+ * Fetch aggregate stats for a capsule's training entries.
+ * Reuses the service client already configured in this file.
+ * Returns empty arrays / zeros when the capsule has no entries yet (not an error).
+ *
+ * @throws with a message naming the table that failed on any Supabase error.
+ */
+export async function fetchCapsuleStats(capsuleId: string): Promise<CapsuleStats> {
+  const supabase = createServiceClient()
+  const empty: CapsuleStats = { approvedTags: [], rejectionPatterns: [], antiSlopScore: 0, trainingDays: 0 }
+
+  // 1. Resolve the capsule's context (entries are attached to the context, not the capsule).
+  const { data: capsule, error: capsuleErr } = await supabase
+    .from('capsules')
+    .select('context_id')
+    .eq('id', capsuleId)
+    .single()
+  if (capsuleErr) {
+    throw new Error(`fetchCapsuleStats: failed to load capsule "${capsuleId}" (table: capsules): ${capsuleErr.message}`)
+  }
+  const contextId: string | null = capsule?.context_id ?? null
+  if (!contextId) return empty
+
+  // 2. Fetch approved (keep) and rejected (reject) entries in parallel for speed.
+  const [approvedRes, rejectedRes] = await Promise.all([
+    supabase.from('captures').select('tags, created_at').contains('context_ids', [contextId]).eq('verdict', 'keep'),
+    supabase.from('captures').select('tags, created_at').contains('context_ids', [contextId]).eq('verdict', 'reject'),
+  ])
+  if (approvedRes.error) {
+    throw new Error(`fetchCapsuleStats: failed to load approved entries (table: captures): ${approvedRes.error.message}`)
+  }
+  if (rejectedRes.error) {
+    throw new Error(`fetchCapsuleStats: failed to load rejected entries (table: captures): ${rejectedRes.error.message}`)
+  }
+
+  const approved = (approvedRes.data ?? []) as StatRow[]
+  const rejected = (rejectedRes.data ?? []) as StatRow[]
+
+  // No entries yet → empty result, not an error.
+  if (approved.length === 0 && rejected.length === 0) return empty
+
+  const approvedCounts = tallyTags(approved)
+  const rejectedCounts = tallyTags(rejected)
+
+  // approvedTags: top 8 by count, with approvalRate = approved / (approved + rejected) for that tag.
+  const approvedTags: ApprovedTagStat[] = Array.from(approvedCounts.entries())
+    .map(([tag, count]) => {
+      const rejectedForTag = rejectedCounts.get(tag) ?? 0
+      const total = count + rejectedForTag
+      const approvalRate = total === 0 ? 0 : Math.round((count / total) * 100) / 100
+      return { tag, count, approvalRate }
+    })
+    .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag))
+    .slice(0, 8)
+
+  // rejectionPatterns: top 6 rejected tags by count.
+  const rejectionPatterns: RejectionPatternStat[] = Array.from(rejectedCounts.entries())
+    .map(([tag, count]) => ({ tag, count }))
+    .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag))
+    .slice(0, 6)
+
+  // antiSlopScore: share of rejections tagged 'ai-slop', doubled, capped at 100.
+  const totalRejections = rejected.length
+  const aiSlopRejections = rejected.filter(r => (r.tags ?? []).includes('ai-slop')).length
+  const antiSlopScore = totalRejections === 0
+    ? 0
+    : Math.min(100, Math.round((aiSlopRejections / totalRejections) * 100 * 2))
+
+  // trainingDays: distinct calendar dates across all judged entries.
+  const days = new Set<string>()
+  for (const r of [...approved, ...rejected]) days.add(r.created_at.slice(0, 10))
+  const trainingDays = days.size
+
+  return { approvedTags, rejectionPatterns, antiSlopScore, trainingDays }
+}
+
+// ── Manual test (uncomment to run; see run instructions in chat) ──────────────
+// ;(async () => {
+//   const data = await fetchCapsuleStats('test-id')
+//   console.log(JSON.stringify(data, null, 2))
+// })()
