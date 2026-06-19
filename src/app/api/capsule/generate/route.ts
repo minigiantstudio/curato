@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient as createSupabaseClient } from '@supabase/supabase-js'
-import { getCapsule, saveCapsule, nextVersion } from '@/lib/capsule'
+import { nextVersion } from '@/lib/capsule'
 import type { Capture } from '@/types/capture'
 import type { Context } from '@/types/context'
 import type { DistilledRule } from '@/types/capsule'
@@ -100,9 +100,16 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Determine next version
-    const latest = await getCapsule(contextId)
-    const version = nextVersion(latest)
+    // Determine next version (service client — the lib getCapsule uses the browser
+    // client, which has no session in this server route).
+    const { data: latestRows } = await supabase
+      .from('capsules')
+      .select('version')
+      .eq('context_id', contextId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+    const latestVersion = (latestRows?.[0]?.version as string | undefined) ?? null
+    const version = nextVersion(latestVersion ? ({ version: latestVersion } as never) : null)
 
     // Build capture lines
     const captureLines = captures.map(c => {
@@ -162,14 +169,27 @@ Rules:
       throw new Error('Claude returned invalid Capsule structure — missing declaration')
     }
 
-    const capsule = await saveCapsule({
-      context_id: contextId,
-      version,
-      title: `${context.name} ${version}`,
-      declaration: parsed.declaration,
-      rules: parsed.distilled_rules,
-      frequency_map: parsed.frequency_map,
-    })
+    // Save with the service client + the authenticated user (the lib saveCapsule
+    // relies on the browser session, which is absent in this server route).
+    const { data: capsule, error: saveError } = await supabase
+      .from('capsules')
+      .insert({
+        user_id: user.id,
+        context_id: contextId,
+        version,
+        title: `${context.name} ${version}`,
+        declaration: parsed.declaration,
+        rules: parsed.distilled_rules,
+        frequency_map: parsed.frequency_map,
+        protocol_version: '1',
+      } as never)
+      .select()
+      .single()
+
+    if (saveError || !capsule) {
+      console.error('generate: failed to save capsule:', saveError)
+      throw new Error('Failed to save capsule')
+    }
 
     return NextResponse.json({
       capsule,
