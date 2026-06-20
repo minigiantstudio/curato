@@ -248,8 +248,8 @@ export async function fetchCapsuleStats(capsuleId: string): Promise<CapsuleStats
   return { approvedTags, rejectionPatterns, antiSlopScore, trainingDays }
 }
 
-// ── Manual test (uncomment to run; see run instructions in chat) ──────────────
-// ;(async () => {
-//   const data = await fetchCapsuleStats('test-id')
-//   console.log(JSON.stringify(data, null, 2))
-// })()
+// ── Manual test ──────────────────────────────────────────────────────────────
+// Do NOT add a top-level call here — this module is imported by the /api routes,
+// so anything at module scope runs on every server start. To test fetchCapsuleStats,
+// use the standalone script:
+//   npx tsx --env-file=.env.local scripts/test-stats.ts <capsuleId>
