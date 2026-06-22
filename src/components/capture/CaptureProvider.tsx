@@ -103,8 +103,8 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
       ? await saveCaptureWithMedia(insert, mediaFile, 'photos')
       : await saveCapture(insert)
 
-    if (saved && session?.user?.id) {
-      void triggerAgent(saved.id, session.user.id)
+    if (saved) {
+      void triggerAgent(saved.id)
     }
     setSavedEntry({ type: type!, content: content ?? '', verdict: verdict ?? null, domain: ctx?.domain ?? '', tags: ctx?.tags ?? [] })
     setStep('done')
@@ -146,8 +146,8 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
 
     // Agent processes the primary capture only; the rule row is linked context,
     // not a trigger target.
-    if (saved && session?.user?.id) {
-      void triggerAgent(saved.id, session.user.id)
+    if (saved) {
+      void triggerAgent(saved.id)
     }
     setSavedEntry({
       type: type!,
