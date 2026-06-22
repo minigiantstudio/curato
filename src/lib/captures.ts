@@ -186,7 +186,6 @@ export async function searchCaptures(
   let q = supabase
     .from('captures')
     .select('*')
-    .eq('archived' as never, false)
     .order('created_at', { ascending: false })
     .range(page * pageSize, (page + 1) * pageSize - 1)
 
