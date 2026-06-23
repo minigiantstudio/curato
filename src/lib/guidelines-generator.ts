@@ -156,6 +156,7 @@ export interface CapsuleStats {
   rejectionPatterns: RejectionPatternStat[] // top 6 by count
   antiSlopScore: number
   trainingDays: number
+  entryCount: number
 }
 
 interface StatRow {
@@ -181,7 +182,7 @@ function tallyTags(rows: StatRow[]): Map<string, number> {
  */
 export async function fetchCapsuleStats(capsuleId: string): Promise<CapsuleStats> {
   const supabase = createServiceClient()
-  const empty: CapsuleStats = { approvedTags: [], rejectionPatterns: [], antiSlopScore: 0, trainingDays: 0 }
+  const empty: CapsuleStats = { approvedTags: [], rejectionPatterns: [], antiSlopScore: 0, trainingDays: 0, entryCount: 0 }
 
   // 1. Resolve the capsule's context (entries are attached to the context, not the capsule).
   const { data: capsule, error: capsuleErr } = await supabase
@@ -245,7 +246,7 @@ export async function fetchCapsuleStats(capsuleId: string): Promise<CapsuleStats
   for (const r of [...approved, ...rejected]) days.add(r.created_at.slice(0, 10))
   const trainingDays = days.size
 
-  return { approvedTags, rejectionPatterns, antiSlopScore, trainingDays }
+  return { approvedTags, rejectionPatterns, antiSlopScore, trainingDays, entryCount: approved.length + rejected.length }
 }
 
 // ── Manual test ──────────────────────────────────────────────────────────────
