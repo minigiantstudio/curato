@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
     const stats = await fetchCapsuleStats(capsuleId)
     return NextResponse.json(stats)
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 })
+    console.error('capsule/stats: fetchCapsuleStats failed:', err)
+    return NextResponse.json({ error: 'Stats unavailable' }, { status: 500 })
   }
 }
