@@ -1,6 +1,6 @@
-# Taste App
+# Curato
 
-Art Director capture and taste synthesis tool. See TASTE_PHASES.md for architecture.
+Visual intelligence capture and synthesis tool. See TASTE_PHASES.md for architecture.
 
 ## Git & Deploy Rules
 - **Always push to `main`** — no feature branches; every commit goes directly to `origin/main`
@@ -111,6 +111,7 @@ Phase 3 components built:
 ## Design system
 - Tokens: always CSS variables — `var(--violet)`, `var(--cream)`, `var(--ink)`, etc.
 - Fonts: ABCArizona Flare = display/editorial (`font-family: var(--display)`); DM Mono = UI/labels/data (`font-family: var(--mono)`)
+- Sharp corners: new Curato components use `borderRadius: 0` on primary buttons and cards
 - Icons: `<Ic.photo />` from `src/components/icons.tsx` only — no external icon libraries
 
 ## Capsule hierarchy

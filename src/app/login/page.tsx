@@ -47,7 +47,7 @@ export default function LoginPage() {
           fontFamily: 'var(--display)', fontSize: 32, fontWeight: 400,
           letterSpacing: '-0.02em', color: 'var(--ink)', marginBottom: 8,
         }}>
-          Taste
+          Curato
         </h1>
         <p style={{ fontSize: 13, color: 'var(--ink-soft)', marginBottom: 28, lineHeight: 1.5 }}>
           Sign in with your email. We&apos;ll send you a one-tap sign-in link.

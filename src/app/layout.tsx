@@ -10,8 +10,8 @@ const dmMono = DM_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Taste',
-  description: 'Art Director capture and taste synthesis',
+  title: 'Curato',
+  description: 'Visual intelligence capture and synthesis',
   manifest: '/manifest.json',
   viewport: {
     width: 'device-width',
