@@ -1,4 +1,4 @@
-import type { SVGProps } from 'react'
+import type { SVGProps, CSSProperties } from 'react'
 
 type P = SVGProps<SVGSVGElement>
 
@@ -98,5 +98,22 @@ export const Ic = {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" {...p}>
       <path d="M7 17L17 7M9 7h8v8" />
     </svg>
+  ),
+  mark: ({ s = 20, style }: { s?: number; style?: CSSProperties }) => (
+    <div style={{
+      width: s, height: s,
+      border: '1.5px solid var(--violet)',
+      borderRadius: '50%',
+      position: 'relative',
+      flexShrink: 0,
+      ...style,
+    }}>
+      <span style={{
+        position: 'absolute',
+        inset: s * 0.22,
+        borderRadius: '50%',
+        background: 'var(--violet)',
+      }} />
+    </div>
   ),
 }
