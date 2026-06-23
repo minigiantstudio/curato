@@ -99,8 +99,10 @@ export const Ic = {
       <path d="M7 17L17 7M9 7h8v8" />
     </svg>
   ),
+  /** div-based icon: accepts {s, style} only — does not accept SVGProps */
   mark: ({ s = 20, style }: { s?: number; style?: CSSProperties }) => (
     <div style={{
+      display: 'inline-flex',
       width: s, height: s,
       border: '1.5px solid var(--violet)',
       borderRadius: '50%',
