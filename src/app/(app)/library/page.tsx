@@ -5,6 +5,7 @@ import { searchCaptures, bulkAssignContext, deleteCapture } from '@/lib/captures
 import type { LibraryFilters } from '@/lib/captures'
 import { getContexts } from '@/lib/contexts'
 import { SearchBar } from '@/components/library/SearchBar'
+import { FeedCard } from '@/components/feed/FeedCard'
 import { FilterBar } from '@/components/library/FilterBar'
 import { LibraryCard } from '@/components/library/LibraryCard'
 import { CaptureDetail } from '@/components/capture/CaptureDetail'
@@ -20,6 +21,18 @@ const EMPTY_FILTERS: LibraryFilters = {
   contextId: null,
   hasMedia: null,
   dateRange: null,
+}
+
+function isEmptyFilters(f: LibraryFilters): boolean {
+  return (
+    f.query === '' &&
+    f.types.length === 0 &&
+    f.domains.length === 0 &&
+    f.verdict === null &&
+    f.contextId === null &&
+    f.hasMedia === null &&
+    f.dateRange === null
+  )
 }
 
 export default function LibraryPage() {
@@ -158,6 +171,32 @@ export default function LibraryPage() {
         value={filters.query}
         onSearch={q => setFilters(f => ({ ...f, query: q }))}
       />
+
+      {/* Recents strip — shown only when no filters/search are active */}
+      {!loading && captures.length > 0 && isEmptyFilters(filters) && (
+        <div style={{ padding: '12px 0 4px' }}>
+          <div style={{
+            fontFamily: 'var(--mono)', fontSize: 10,
+            letterSpacing: '0.08em', textTransform: 'uppercase',
+            color: 'var(--ink-faint)',
+            padding: '0 16px 8px',
+          }}>Recents</div>
+          <div style={{
+            display: 'flex', gap: 10,
+            overflowX: 'auto', paddingLeft: 16, paddingRight: 16,
+            scrollbarWidth: 'none',
+          }}>
+            {captures.slice(0, 6).map(c => (
+              <div key={c.id} style={{ flexShrink: 0, width: 160 }}>
+                <FeedCard
+                  capture={c}
+                  onLongPress={handleLongPress}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <FilterBar
