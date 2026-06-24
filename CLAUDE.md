@@ -7,6 +7,21 @@ Visual intelligence capture and synthesis tool. See TASTE_PHASES.md for architec
 - Vercel is connected to `main` and auto-deploys to production on every push
 
 ## Current Phase
+Curato Home — COMPLETE
+
+Renamed app from "Taste" to "Curato". Replaced FeedScreen with Curato HomeScreen dashboard.
+New files:
+- `src/components/home/CapsuleWidget.tsx` — divergence bar widget (anchors/rejections)
+- `src/components/home/StepRail.tsx` — 3-row loop (Capture / Library / Export)
+- `src/components/home/ExportSheet.tsx` — export sheet with Claude/Figma/Canva rows
+- `src/app/api/capsule/stats/route.ts` — GET /api/capsule/stats?capsuleId=
+Modified:
+- `src/app/(app)/feed/page.tsx` — replaced with new HomeScreen
+- `src/app/(app)/library/page.tsx` — added Recents horizontal strip above FilterBar
+- `src/lib/guidelines-generator.ts` — CapsuleStats.entryCount added
+- `src/app/globals.css` — fadeUp, growW, shimmer keyframes added
+- `src/components/icons.tsx` — Ic.mark (div-based circle icon) added
+
 Phase 6 (Dossier) — COMPLETE
 
 Magic-Link Auth — COMPLETE
