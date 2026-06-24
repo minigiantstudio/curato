@@ -82,8 +82,7 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
     const { type, content, ruleVerb, verdict, mediaFile } = flowData.current
 
     // Ensure anon session exists (best-effort; saveCapture handles offline)
-    let session = null
-    try { session = await getOrCreateAnonSession() } catch { /* offline — queue will handle */ }
+    try { await getOrCreateAnonSession() } catch { /* offline — queue will handle */ }
     await flushOfflineQueue()
 
     const insert: CaptureInsert = {
