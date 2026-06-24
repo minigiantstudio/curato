@@ -113,8 +113,7 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
   async function persistFocusAndDone(data: FocusContextData, brand: Context) {
     const { type, mediaFile } = flowData.current
 
-    let session = null
-    try { session = await getOrCreateAnonSession() } catch { /* offline */ }
+    try { await getOrCreateAnonSession() } catch { /* offline */ }
     await flushOfflineQueue()
 
     // Primary capture row — tagged to the focused brand
