@@ -1,180 +1,183 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { FeedCard } from '@/components/feed/FeedCard'
-import { AgentTriageStrip } from '@/components/feed/AgentTriageStrip'
-import { FocusBar } from '@/components/focus'
-import { getTodayCaptures, subscribeToTodayCaptures, acceptAgentSuggestion, acceptAllSuggestions } from '@/lib/captures'
-import { getContexts } from '@/lib/contexts'
-import { AssignContextSheet } from '@/components/contexts/AssignContextSheet'
-import type { Capture } from '@/types/capture'
-import type { Context } from '@/types/context'
+import { createClient } from '@/lib/supabase'
+import { useCaptureContext } from '@/components/capture/CaptureProvider'
+import { FocusBar } from '@/components/focus/FocusBar'
+import { CapsuleWidget } from '@/components/home/CapsuleWidget'
+import { StepRail } from '@/components/home/StepRail'
+import { ExportSheet } from '@/components/home/ExportSheet'
+import { Ic } from '@/components/icons'
+import type { CapsuleStats } from '@/lib/guidelines-generator'
 
-function todayLabel(): string {
-  return new Date().toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  }).toUpperCase()
+interface CapsuleRow {
+  id: string
+  version: number
+  created_at: string
+  rules: unknown[]
 }
 
-export default function FeedPage() {
-  const [captures, setCaptures] = useState<Capture[]>([])
-  const [contexts, setContexts] = useState<Context[]>([])
-  const [loading, setLoading] = useState(true)
-  const [suggestionLoading, setSuggestionLoading] = useState(false)
-  const [assignCapture, setAssignCapture] = useState<Capture | null>(null)
+function headerDate(): string {
+  const d = new Date()
+  const day = d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()
+  const mon = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase()
+  return `${day} · ${mon} ${d.getDate()}`
+}
+
+export default function HomePage() {
+  const { openCapture } = useCaptureContext()
+  const [capsule, setCapsule]       = useState<CapsuleRow | null>(null)
+  const [stats,   setStats]         = useState<CapsuleStats | null>(null)
+  const [todayCount, setTodayCount] = useState(0)
+  const [totalCount, setTotalCount] = useState(0)
+  const [loading, setLoading]       = useState(true)
+  const [exportOpen, setExportOpen] = useState(false)
 
   useEffect(() => {
-    getTodayCaptures().then(setCaptures).finally(() => setLoading(false))
+    async function load() {
+      const supabase = createClient()
 
-    const unsubscribe = subscribeToTodayCaptures(setCaptures, err => {
-      console.error('Real-time subscription error:', err)
-    })
+      const { data: cap } = await supabase
+        .from('capsules')
+        .select('id, version, created_at, rules')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
 
-    return unsubscribe
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const [todayRes, totalRes] = await Promise.all([
+        supabase
+          .from('captures')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', today.toISOString()),
+        supabase
+          .from('captures')
+          .select('*', { count: 'exact', head: true }),
+      ])
+
+      setTodayCount(todayRes.count ?? 0)
+      setTotalCount(totalRes.count ?? 0)
+
+      if (cap) {
+        setCapsule(cap as CapsuleRow)
+        try {
+          const res = await fetch(`/api/capsule/stats?capsuleId=${cap.id}`)
+          if (res.ok) setStats(await res.json() as CapsuleStats)
+        } catch {
+          // silent
+        }
+      }
+
+      setLoading(false)
+    }
+    load()
   }, [])
 
-  useEffect(() => {
-    getContexts().then(setContexts)
-  }, [])
-
-  const rulesCount = captures.filter(c => c.type === 'rule').length
-
-  const handleAcceptSuggestion = async (captureId: string, type: 'tag' | 'domain' | 'context', value: string) => {
-    setSuggestionLoading(true)
-    try {
-      await acceptAgentSuggestion(captureId, type, value)
-      const updated = await getTodayCaptures()
-      setCaptures(updated)
-    } finally {
-      setSuggestionLoading(false)
-    }
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleDismissSuggestion = async (_captureId: string, _type: 'tag' | 'domain' | 'context', _value: string): Promise<void> => {
-    // TODO: implement dismiss (remove from ai_* arrays without accepting)
-  }
-
-  function handleLongPress(capture: Capture) {
-    setAssignCapture(capture)
-  }
-
-  function handleAssignSaved(captureId: string, contextIds: string[]) {
-    setCaptures(prev =>
-      prev.map(c => (c.id === captureId ? { ...c, context_ids: contextIds } : c))
-    )
-  }
-
-  const handleAcceptAll = async () => {
-    setSuggestionLoading(true)
-    try {
-      const capturesWithSuggestions = captures.filter(
-        c => (c.ai_tags?.length ?? 0) + (c.ai_domains?.length ?? 0) + (c.ai_suggested_contexts?.length ?? 0) > 0
-      )
-      await acceptAllSuggestions(capturesWithSuggestions.map(c => c.id))
-      const updated = await getTodayCaptures()
-      setCaptures(updated)
-    } finally {
-      setSuggestionLoading(false)
-    }
-  }
+  const trainingDays = stats?.trainingDays ?? 0
 
   return (
-    <div className="screen-in" style={{ height: '100%', overflowY: 'auto', background: 'var(--cream)' }}>
+    <div style={{ background: 'var(--cream)', minHeight: '100dvh' }}>
       <FocusBar />
-      {/* Header */}
-      <div
-        style={{
-          padding: '16px 20px 12px',
-          borderBottom: '1px solid var(--line-soft)',
-          background: 'rgba(243,236,221,0.96)',
-          position: 'sticky',
-          top: 0,
-          zIndex: 5,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span
-            style={{
-              fontFamily: 'var(--display)',
-              fontSize: 20,
-              fontWeight: 400,
-              letterSpacing: '-0.015em',
-              color: 'var(--ink)',
-            }}
-          >
-            Today&#39;s records
-          </span>
-          <span style={{ fontSize: 10, letterSpacing: '0.06em', color: 'var(--ink-faint)' }}>
-            {todayLabel()}
-          </span>
+
+      <div style={{
+        maxWidth: 480,
+        margin: '0 auto',
+        paddingBottom: 96,
+        animation: 'fadeUp 0.4s ease both',
+      }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '24px 20px 8px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Ic.mark s={18} />
+            <span style={{
+              fontFamily: 'var(--mono)', fontSize: 13, fontWeight: 600,
+              letterSpacing: '0.08em', color: 'var(--ink)',
+            }}>CURATO</span>
+          </div>
+          <span style={{
+            fontFamily: 'var(--mono)', fontSize: 11,
+            color: 'var(--ink-faint)', letterSpacing: '0.04em',
+          }}>{headerDate()}</span>
         </div>
-        <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
-          {([
-            [String(captures.length), 'entries'],
-            [String(rulesCount), 'rules'],
-            ['v0.1', 'capsule'],
-          ] as [string, string][]).map(([n, l]) => (
-            <div key={l} style={{ display: 'flex', alignItems: 'baseline', gap: 3 }}>
-              <span style={{ fontFamily: 'var(--display)', fontSize: 15, fontWeight: 400, color: 'var(--ink)' }}>{n}</span>
-              <span style={{ fontSize: 10, letterSpacing: '0.1em', color: 'var(--ink-faint)', textTransform: 'uppercase' }}>{l}</span>
-            </div>
-          ))}
+
+        <div style={{ padding: '16px 20px 4px' }}>
+          <div style={{
+            fontFamily: 'var(--mono)', fontSize: 11,
+            color: 'var(--violet)', letterSpacing: '0.06em',
+            textTransform: 'uppercase', marginBottom: 8,
+          }}>
+            {`Day ${trainingDays} · the eye`}
+          </div>
+          <h1 style={{
+            fontFamily: 'var(--display)', fontSize: 31, fontWeight: 400,
+            lineHeight: 1.12, letterSpacing: '-0.015em',
+            color: 'var(--ink)', margin: 0,
+          }}>
+            Your taste is<br />
+            becoming{' '}
+            <em style={{ color: 'var(--violet)', fontStyle: 'italic' }}>legible.</em>
+          </h1>
+        </div>
+
+        <div style={{ padding: '20px 20px 0' }}>
+          <CapsuleWidget capsule={capsule} stats={stats} loading={loading} />
+        </div>
+
+        <div style={{ padding: '16px 20px 0' }}>
+          <StepRail
+            todayCount={todayCount}
+            totalCount={totalCount}
+            onExport={() => setExportOpen(true)}
+          />
         </div>
       </div>
 
-      {/* Agent triage strip */}
-      <AgentTriageStrip
-        captures={captures}
-        contexts={contexts}
-        onAcceptSuggestion={handleAcceptSuggestion}
-        onDismissSuggestion={handleDismissSuggestion}
-        onAcceptAll={handleAcceptAll}
-        loading={suggestionLoading}
-      />
-
-      {/* Feed list */}
-      <div style={{ padding: '10px 20px 100px' }}>
-        {!loading && captures.length > 0 && (
-          <div style={{ padding: '4px 0 8px' }}>
-            <span style={{ fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
-              Latest captures
-            </span>
-          </div>
-        )}
-        {loading && (
-          <div style={{ paddingTop: 48, textAlign: 'center', color: 'var(--ink-faint)', fontSize: 12, letterSpacing: '0.04em' }}>
-            Loading…
-          </div>
-        )}
-        {!loading && captures.length === 0 && (
-          <div className="fade-in" style={{ paddingTop: 60, textAlign: 'center' }}>
-            <p style={{ fontFamily: 'var(--display)', fontSize: 18, color: 'var(--ink-soft)', letterSpacing: '-0.01em' }}>
-              Nothing captured yet.
-            </p>
-            <p style={{ fontSize: 12, color: 'var(--ink-faint)', marginTop: 6 }}>Tap + to start.</p>
-          </div>
-        )}
-        <div className="feed-grid" style={{ columns: 'auto 2', gap: '16px' }}>
-          {captures.map(c => (
-            <FeedCard
-                key={c.id}
-                capture={c}
-                contexts={contexts}
-                onEditContext={() => setAssignCapture(c)}
-                onLongPress={handleLongPress}
-              />
-          ))}
-        </div>
+      <div style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0,
+        display: 'flex', height: 56,
+        borderTop: '1px solid var(--line-soft)',
+        background: 'var(--cream)',
+      }}>
+        <button
+          onClick={openCapture}
+          style={{
+            flex: 1,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            background: 'var(--violet)', color: 'var(--cream)',
+            fontFamily: 'var(--mono)', fontSize: 13, fontWeight: 600,
+            letterSpacing: '0.06em',
+            border: 'none', cursor: 'pointer', borderRadius: 0,
+          }}
+        >
+          <span style={{ fontSize: 15 }}>◉</span>
+          CAPTURE
+        </button>
+        <button
+          onClick={() => setExportOpen(true)}
+          style={{
+            width: 56,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'var(--cream-2)',
+            border: 'none', borderLeft: '1px solid var(--line-soft)',
+            cursor: 'pointer', borderRadius: 0,
+            fontFamily: 'var(--mono)', fontSize: 18, color: 'var(--ink)',
+          }}
+        >
+          ↑
+        </button>
       </div>
-      <AssignContextSheet
-        open={assignCapture !== null}
-        capture={assignCapture}
-        onClose={() => setAssignCapture(null)}
-        onSaved={handleAssignSaved}
-      />
+
+      {exportOpen && (
+        <ExportSheet
+          open={exportOpen}
+          onClose={() => setExportOpen(false)}
+          capsuleId={capsule?.id ?? null}
+          capsuleVersion={capsule?.version ?? null}
+        />
+      )}
     </div>
   )
 }
