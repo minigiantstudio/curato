@@ -5,7 +5,6 @@ import { searchCaptures, bulkAssignContext, deleteCapture } from '@/lib/captures
 import type { LibraryFilters } from '@/lib/captures'
 import { getContexts } from '@/lib/contexts'
 import { SearchBar } from '@/components/library/SearchBar'
-import { FeedCard } from '@/components/feed/FeedCard'
 import { FilterBar } from '@/components/library/FilterBar'
 import { LibraryCard } from '@/components/library/LibraryCard'
 import { CaptureDetail } from '@/components/capture/CaptureDetail'
@@ -188,9 +187,11 @@ export default function LibraryPage() {
           }}>
             {captures.slice(0, 6).map(c => (
               <div key={c.id} style={{ flexShrink: 0, width: 160 }}>
-                <FeedCard
+                <LibraryCard
                   capture={c}
-                  onLongPress={handleLongPress}
+                  selected={false}
+                  onClick={() => setDetailCapture(c)}
+                  onLongPress={() => handleLongPress(c)}
                 />
               </div>
             ))}
