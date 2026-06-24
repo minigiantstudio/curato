@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useCaptureContext } from '@/components/capture/CaptureProvider'
-import { FocusBar } from '@/components/focus/FocusBar'
+import { FocusBar } from '@/components/focus'
 import { CapsuleWidget } from '@/components/home/CapsuleWidget'
 import { StepRail } from '@/components/home/StepRail'
 import { ExportSheet } from '@/components/home/ExportSheet'
@@ -35,41 +35,43 @@ export default function HomePage() {
 
   useEffect(() => {
     async function load() {
-      const supabase = createClient()
+      try {
+        const supabase = createClient()
 
-      const { data: cap } = await supabase
-        .from('capsules')
-        .select('id, version, created_at, rules')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single()
+        const { data: cap } = await supabase
+          .from('capsules')
+          .select('id, version, created_at, rules')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single()
 
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      const [todayRes, totalRes] = await Promise.all([
-        supabase
-          .from('captures')
-          .select('*', { count: 'exact', head: true })
-          .gte('created_at', today.toISOString()),
-        supabase
-          .from('captures')
-          .select('*', { count: 'exact', head: true }),
-      ])
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const [todayRes, totalRes] = await Promise.all([
+          supabase
+            .from('captures')
+            .select('*', { count: 'exact', head: true })
+            .gte('created_at', today.toISOString()),
+          supabase
+            .from('captures')
+            .select('*', { count: 'exact', head: true }),
+        ])
 
-      setTodayCount(todayRes.count ?? 0)
-      setTotalCount(totalRes.count ?? 0)
+        setTodayCount(todayRes.count ?? 0)
+        setTotalCount(totalRes.count ?? 0)
 
-      if (cap) {
-        setCapsule(cap as CapsuleRow)
-        try {
-          const res = await fetch(`/api/capsule/stats?capsuleId=${cap.id}`)
-          if (res.ok) setStats(await res.json() as CapsuleStats)
-        } catch {
-          // silent
+        if (cap) {
+          setCapsule(cap as CapsuleRow)
+          try {
+            const res = await fetch(`/api/capsule/stats?capsuleId=${cap.id}`)
+            if (res.ok) setStats(await res.json() as CapsuleStats)
+          } catch {
+            // silent
+          }
         }
+      } finally {
+        setLoading(false)
       }
-
-      setLoading(false)
     }
     load()
   }, [])

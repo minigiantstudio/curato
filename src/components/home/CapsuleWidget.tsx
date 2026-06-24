@@ -81,7 +81,7 @@ export function CapsuleWidget({ capsule, stats, loading }: Props) {
           <div key={i} style={{
             height: 20, margin: '10px 16px',
             background: 'var(--cream-2)',
-            animation: 'pulse 1.4s ease infinite',
+            animation: 'shimmer 1.4s ease infinite',
             animationDelay: `${i * 120}ms`,
             borderRadius: 2,
           }} />
@@ -153,7 +153,7 @@ export function CapsuleWidget({ capsule, stats, loading }: Props) {
                 count={t.count}
                 max={maxApproved}
                 color="var(--green)"
-                soft="var(--green-soft, #e8f5e9)"
+                soft="var(--green-soft)"
                 side="left"
                 delay={i * 90}
               />
@@ -175,7 +175,7 @@ export function CapsuleWidget({ capsule, stats, loading }: Props) {
                 count={t.count}
                 max={maxRejected}
                 color="var(--red)"
-                soft="var(--red-soft, #ffeaea)"
+                soft="var(--red-soft)"
                 side="right"
                 delay={i * 90}
               />
