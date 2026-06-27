@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
+import { getInboxCaptures } from '@/lib/captures'
 import { useCaptureContext } from '@/components/capture/CaptureProvider'
 import { FocusBar } from '@/components/focus'
 import { CapsuleWidget } from '@/components/home/CapsuleWidget'
@@ -32,6 +33,11 @@ export default function HomePage() {
   const [totalCount, setTotalCount] = useState(0)
   const [loading, setLoading]       = useState(true)
   const [exportOpen, setExportOpen] = useState(false)
+  const [inboxCount, setInboxCount] = useState(0)
+
+  useEffect(() => {
+    getInboxCaptures().then(items => setInboxCount(items.length))
+  }, [])
 
   useEffect(() => {
     async function load() {
@@ -132,6 +138,7 @@ export default function HomePage() {
           <StepRail
             todayCount={todayCount}
             totalCount={totalCount}
+            inboxCount={inboxCount}
             onExport={() => setExportOpen(true)}
           />
         </div>
