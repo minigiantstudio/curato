@@ -93,6 +93,20 @@ export async function getTodayCaptures(limit = 30): Promise<Capture[]> {
   return (data ?? []) as Capture[]
 }
 
+export async function getInboxCaptures(limit = 20): Promise<Capture[]> {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('captures')
+    .select('*')
+    .is('verdict', null)
+    .in('type', ['photo', 'voice'])
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (error) { console.error('getInboxCaptures:', error); return [] }
+  return (data ?? []) as Capture[]
+}
+
 export function subscribeToTodayCaptures(
   callback: (captures: Capture[]) => void,
   onError?: (err: Error) => void
