@@ -231,10 +231,6 @@ export async function POST(req: NextRequest) {
       .sort(([, a], [, b]) => b - a)
       .map(([tag, count]) => ({ tag, count }))
 
-    const rejectedTags = Object.entries(rejTagFreq)
-      .sort(([, a], [, b]) => b - a)
-      .map(([tag, count]) => ({ tag, count }))
-
     // STEP 6 — Generate patch content
     const today = new Date().toISOString().split('T')[0]
 
