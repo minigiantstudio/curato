@@ -80,7 +80,7 @@ export default function ContextsPage() {
           letterSpacing: '-0.015em',
           color: 'var(--ink)',
         }}>
-          Contexts
+          Brands
         </span>
         <p style={{ fontSize: 11, color: 'var(--ink-faint)', marginTop: 4, letterSpacing: '0.02em' }}>
           Brands and projects for your captures

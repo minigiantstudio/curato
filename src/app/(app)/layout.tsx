@@ -11,9 +11,10 @@ function BottomNav() {
   const pathname = usePathname()
 
   const tabs = [
-    { href: '/feed', label: 'Home' },
-    { href: '/library', label: 'Library' },
-    { href: '/contexts', label: 'Contexts' },
+    { href: '/feed',     label: 'Home'    },
+    { href: '/inbox',    label: 'Inbox'   },
+    { href: '/capsule',  label: 'Capsule' },
+    { href: '/contexts', label: 'Brands'  },
   ]
 
   return (
