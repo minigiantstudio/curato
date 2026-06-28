@@ -63,13 +63,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <FocusProvider>
       <CaptureProvider>
-        <div style={{ position: 'relative', height: '100%', overflow: 'hidden', paddingBottom: 'calc(52px + env(safe-area-inset-bottom))' }}>
-          {children}
-          <FAB />
-          <SyncIndicator />
-          <BottomNav />
-        </div>
+        <AppShell>{children}</AppShell>
       </CaptureProvider>
     </FocusProvider>
+  )
+}
+
+function AppShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
+  const isInbox = pathname.startsWith('/inbox')
+
+  return (
+    <div style={{
+      position: 'relative', height: '100%', overflow: 'hidden',
+      paddingBottom: isInbox ? 0 : 'calc(52px + env(safe-area-inset-bottom))',
+    }}>
+      {children}
+      {!isInbox && <FAB />}
+      <SyncIndicator />
+      {!isInbox && <BottomNav />}
+    </div>
   )
 }
