@@ -11,7 +11,7 @@ function BottomNav() {
   const pathname = usePathname()
 
   const tabs = [
-    { href: '/feed', label: 'Feed' },
+    { href: '/feed', label: 'Home' },
     { href: '/library', label: 'Library' },
     { href: '/contexts', label: 'Contexts' },
   ]

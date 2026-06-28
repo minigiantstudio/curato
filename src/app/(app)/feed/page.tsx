@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { getInboxCaptures } from '@/lib/captures'
 import { useCaptureContext } from '@/components/capture/CaptureProvider'
@@ -16,6 +17,7 @@ interface CapsuleRow {
   version: number
   created_at: string
   rules: unknown[]
+  context_id: string
 }
 
 function headerDate(): string {
@@ -26,6 +28,7 @@ function headerDate(): string {
 }
 
 export default function HomePage() {
+  const router = useRouter()
   const { openCapture } = useCaptureContext()
   const [capsule, setCapsule]       = useState<CapsuleRow | null>(null)
   const [stats,   setStats]         = useState<CapsuleStats | null>(null)
@@ -46,7 +49,7 @@ export default function HomePage() {
 
         const { data: cap } = await supabase
           .from('capsules')
-          .select('id, version, created_at, rules')
+          .select('id, version, created_at, rules, context_id')
           .order('created_at', { ascending: false })
           .limit(1)
           .single()
@@ -131,7 +134,12 @@ export default function HomePage() {
         </div>
 
         <div style={{ padding: '20px 20px 0' }}>
-          <CapsuleWidget capsule={capsule} stats={stats} loading={loading} />
+          <CapsuleWidget
+            capsule={capsule}
+            stats={stats}
+            loading={loading}
+            onClick={capsule?.context_id ? () => router.push(`/capsule/${capsule.context_id}`) : undefined}
+          />
         </div>
 
         <div style={{ padding: '16px 20px 0' }}>
@@ -139,6 +147,8 @@ export default function HomePage() {
             todayCount={todayCount}
             totalCount={totalCount}
             inboxCount={inboxCount}
+            capsuleContextId={capsule?.context_id ?? null}
+            capsuleVersion={capsule?.version ?? null}
             onExport={() => setExportOpen(true)}
           />
         </div>

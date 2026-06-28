@@ -13,6 +13,7 @@ interface Props {
   capsule: CapsuleRow | null
   stats: CapsuleStats | null
   loading: boolean
+  onClick?: () => void
 }
 
 interface TokenBarProps {
@@ -68,7 +69,7 @@ function TokenBar({ name, count, max, color, soft, side, delay }: TokenBarProps)
   )
 }
 
-export function CapsuleWidget({ capsule, stats, loading }: Props) {
+export function CapsuleWidget({ capsule, stats, loading, onClick }: Props) {
   // Loading skeleton
   if (loading) {
     return (
@@ -114,7 +115,14 @@ export function CapsuleWidget({ capsule, stats, loading }: Props) {
   const rulesCount = Array.isArray(capsule.rules) ? capsule.rules.length : 0
 
   return (
-    <div style={{ border: '1px solid var(--line-soft)', borderRadius: 0 }}>
+    <div
+      onClick={onClick}
+      style={{
+        border: '1px solid var(--line-soft)',
+        borderRadius: 0,
+        cursor: onClick ? 'pointer' : 'default',
+      }}
+    >
       {/* Header */}
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -188,20 +196,30 @@ export function CapsuleWidget({ capsule, stats, loading }: Props) {
         padding: '8px 14px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         flexWrap: 'wrap', gap: 4,
+        borderTop: '1px solid var(--line-soft)',
       }}>
         <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink-faint)' }}>
           {entryCount} entries · {rulesCount} rules · trained {timeAgo(capsule.created_at)}
         </span>
-        <span style={{
-          fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--green)',
-          display: 'flex', alignItems: 'center', gap: 4,
-        }}>
+        {onClick ? (
           <span style={{
-            width: 6, height: 6, borderRadius: '50%',
-            background: 'var(--green)', display: 'inline-block',
-          }} />
-          MCP ready
-        </span>
+            fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--violet)',
+            letterSpacing: '0.04em',
+          }}>
+            View →
+          </span>
+        ) : (
+          <span style={{
+            fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--green)',
+            display: 'flex', alignItems: 'center', gap: 4,
+          }}>
+            <span style={{
+              width: 6, height: 6, borderRadius: '50%',
+              background: 'var(--green)', display: 'inline-block',
+            }} />
+            MCP ready
+          </span>
+        )}
       </div>
     </div>
   )

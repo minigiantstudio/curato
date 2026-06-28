@@ -6,10 +6,12 @@ interface Props {
   todayCount: number
   totalCount: number
   inboxCount: number
+  capsuleContextId: string | null
+  capsuleVersion: number | null
   onExport: () => void
 }
 
-export function StepRail({ todayCount, totalCount, inboxCount, onExport }: Props) {
+export function StepRail({ todayCount, totalCount, inboxCount, capsuleContextId, capsuleVersion, onExport }: Props) {
   const router = useRouter()
 
   const rows = [
@@ -27,24 +29,41 @@ export function StepRail({ todayCount, totalCount, inboxCount, onExport }: Props
             fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--green)', lineHeight: 1,
           }}>✓</span>,
       onClick: () => router.push('/inbox'),
+      accent: inboxCount > 0,
     },
     {
       num: '02',
+      title: 'Capsule',
+      sub: capsuleVersion != null ? `v${capsuleVersion} — latest` : 'not generated yet',
+      chip: capsuleContextId
+        ? <span style={{
+            fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--violet)', lineHeight: 1,
+          }}>→</span>
+        : <span style={{
+            fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--ink-faint)', lineHeight: 1,
+          }}>—</span>,
+      onClick: capsuleContextId ? () => router.push(`/capsule/${capsuleContextId}`) : undefined,
+      accent: false,
+    },
+    {
+      num: '03',
       title: 'Library',
       sub: `${totalCount} structured`,
       chip: <span style={{
         fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--green)', lineHeight: 1,
       }}>✓</span>,
       onClick: () => router.push('/library'),
+      accent: false,
     },
     {
-      num: '03',
+      num: '04',
       title: 'Export',
       sub: 'Claude · Figma · Canva',
       chip: <span style={{
         fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--ink-faint)', lineHeight: 1,
-      }}>→</span>,
+      }}>↑</span>,
       onClick: onExport,
+      accent: false,
     },
   ]
 
@@ -58,19 +77,21 @@ export function StepRail({ todayCount, totalCount, inboxCount, onExport }: Props
         <button
           key={row.num}
           onClick={row.onClick}
+          disabled={!row.onClick}
           style={{
             display: 'flex', alignItems: 'center',
             width: '100%', minHeight: 48,
             padding: '10px 14px',
             background: 'none', border: 'none',
             borderBottom: i < rows.length - 1 ? '1px solid var(--line-soft)' : 'none',
-            cursor: 'pointer',
+            cursor: row.onClick ? 'pointer' : 'default',
             textAlign: 'left', gap: 12,
+            opacity: row.onClick ? 1 : 0.45,
           }}
         >
           <span style={{
             fontFamily: 'var(--display)', fontSize: 12,
-            color: i === 0 ? 'var(--violet)' : 'var(--ink-faint)',
+            color: row.accent ? 'var(--violet)' : 'var(--ink-faint)',
             minWidth: 20, flexShrink: 0,
           }}>{row.num}</span>
           <div style={{ flex: 1 }}>
