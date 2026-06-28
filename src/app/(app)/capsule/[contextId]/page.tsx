@@ -7,6 +7,7 @@ import { getContextById } from '@/lib/contexts'
 import { getCapsule, getCapsuleHistory, diffCapsules } from '@/lib/capsule'
 import type { Context } from '@/types/context'
 import type { Capsule, DistilledRule, CapsuleDiffResult } from '@/types/capsule'
+import { SyncButton } from '@/components/ds/SyncButton'
 
 interface PageProps {
   params: { contextId: string }
@@ -255,6 +256,13 @@ export default function CapsuleScreen({ params }: PageProps) {
           >
             Open Dossier
           </button>
+        )}
+
+        {/* Sync to design system */}
+        {capsule && (
+          <div style={{ marginBottom: 24 }}>
+            <SyncButton capsuleId={capsule.id} capsuleVersion={capsule.version} />
+          </div>
         )}
 
         {/* Frequency word cloud */}
