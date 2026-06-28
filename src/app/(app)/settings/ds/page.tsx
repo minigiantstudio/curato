@@ -53,10 +53,9 @@ export default function DSSettingsPage() {
     setLoading(false)
   }
 
-  async function handleConnectSuccess(id: string) {
+  async function handleConnectSuccess(_id: string) {
     setShowModal(false)
     if (userId) await load(userId)
-    router.push('/settings/ds/' + id)
   }
 
   async function handleDelete(id: string) {
