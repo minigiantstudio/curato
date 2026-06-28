@@ -91,9 +91,10 @@ export async function createDSConnection(
 export async function updateDSSyncStatus(
   id: string,
   status: DSSyncStatus,
-  extra?: Partial<DSConnection>
+  extra?: Partial<DSConnection>,
+  client?: ReturnType<typeof createClient>
 ): Promise<void> {
-  const supabase = createClient()
+  const supabase = client ?? createClient()
   const { error } = await supabase
     .from('ds_connections')
     .update({ sync_status: status, updated_at: new Date().toISOString(), ...extra })
@@ -155,9 +156,10 @@ export async function createDSVersion(
     rules_snapshot: CapsuleRule[] | null
     feelings_snapshot: CapsuleFeeling[] | null
     anti_slop_score: number | null
-  }
+  },
+  client?: ReturnType<typeof createClient>
 ): Promise<DSVersion> {
-  const supabase = createClient()
+  const supabase = client ?? createClient()
 
   // Demote existing current version — not atomic, but acceptable for single-user DS flow
   await supabase
@@ -243,10 +245,11 @@ export async function insertChangelogEntries(
     before_value?: string
     after_value?: string
     source?: string
-  }>
+  }>,
+  client?: ReturnType<typeof createClient>
 ): Promise<void> {
   if (entries.length === 0) return
-  const supabase = createClient()
+  const supabase = client ?? createClient()
   const rows = entries.map(e => ({
     user_id: userId,
     version_id: versionId,

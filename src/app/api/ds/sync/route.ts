@@ -166,7 +166,7 @@ export async function POST(req: NextRequest) {
   }
 
   // STEP 3 — Set syncing
-  await updateDSSyncStatus(ds_connection_id, 'syncing')
+  await updateDSSyncStatus(ds_connection_id, 'syncing', undefined, supabase)
 
   try {
     // STEP 4 — Load capsule
@@ -178,7 +178,7 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (capsuleErr || !capsuleRow) {
-      await updateDSSyncStatus(ds_connection_id, 'connected')
+      await updateDSSyncStatus(ds_connection_id, 'connected', undefined, supabase)
       return NextResponse.json({ error: 'Capsule not found' }, { status: 404 })
     }
 
@@ -326,7 +326,8 @@ export async function POST(req: NextRequest) {
         rules_snapshot: rules,
         feelings_snapshot: null,
         anti_slop_score: antiSlopScore,
-      }
+      },
+      supabase
     )
 
     await supabase
@@ -335,14 +336,14 @@ export async function POST(req: NextRequest) {
       .eq('id', dsVersion.id)
 
     // STEP 10 — insertChangelogEntries
-    await insertChangelogEntries(user.id, dsVersion.id, changelogEntries)
+    await insertChangelogEntries(user.id, dsVersion.id, changelogEntries, supabase)
 
     // STEP 11 — updateDSSyncStatus to connected
     await updateDSSyncStatus(ds_connection_id, 'connected', {
       last_synced_at: new Date().toISOString(),
       last_sync_version: version,
       last_capsule_version: capsuleRow.version as string,
-    })
+    }, supabase)
 
     // STEP 12 — Return DSSyncResult
     const result: DSSyncResult = {
@@ -373,7 +374,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(result)
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    await updateDSSyncStatus(ds_connection_id, 'error', { sync_error: message })
+    await updateDSSyncStatus(ds_connection_id, 'error', { sync_error: message }, supabase)
     const result: DSSyncResult = {
       success: false,
       version_id: null,
