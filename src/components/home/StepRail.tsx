@@ -17,19 +17,19 @@ export function StepRail({ todayCount, totalCount, inboxCount, capsuleContextId,
   const rows = [
     {
       num: '01',
-      title: 'Inbox',
-      sub: inboxCount > 0 ? `${inboxCount} to review` : "you're caught up",
-      chip: inboxCount > 0
+      title: 'Captures',
+      sub: `${totalCount} in library`,
+      chip: todayCount > 0
         ? <span style={{
             fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '0.06em',
             color: '#fff', background: 'var(--violet)',
             padding: '2px 7px', borderRadius: 2, fontWeight: 700,
-          }}>{inboxCount}</span>
+          }}>{todayCount}</span>
         : <span style={{
             fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--green)', lineHeight: 1,
           }}>✓</span>,
-      onClick: () => router.push('/inbox'),
-      accent: inboxCount > 0,
+      onClick: () => router.push('/library'),
+      accent: false,
     },
     {
       num: '02',
@@ -47,16 +47,6 @@ export function StepRail({ todayCount, totalCount, inboxCount, capsuleContextId,
     },
     {
       num: '03',
-      title: 'Library',
-      sub: `${totalCount} structured`,
-      chip: <span style={{
-        fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--green)', lineHeight: 1,
-      }}>✓</span>,
-      onClick: () => router.push('/library'),
-      accent: false,
-    },
-    {
-      num: '04',
       title: 'Export',
       sub: 'Claude · Figma · Canva',
       chip: <span style={{
@@ -64,6 +54,22 @@ export function StepRail({ todayCount, totalCount, inboxCount, capsuleContextId,
       }}>↑</span>,
       onClick: onExport,
       accent: false,
+    },
+    {
+      num: '04',
+      title: 'Review',
+      sub: inboxCount > 0 ? `${inboxCount} to review` : "you're caught up",
+      chip: inboxCount > 0
+        ? <span style={{
+            fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '0.06em',
+            color: '#fff', background: 'var(--violet)',
+            padding: '2px 7px', borderRadius: 2, fontWeight: 700,
+          }}>{inboxCount}</span>
+        : <span style={{
+            fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--green)', lineHeight: 1,
+          }}>✓</span>,
+      onClick: () => router.push('/inbox'),
+      accent: inboxCount > 0,
     },
   ]
 
