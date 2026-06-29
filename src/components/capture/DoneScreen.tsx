@@ -128,7 +128,7 @@ export function DoneScreen({ entry, onAgain, onFeed, onCapsule }: DoneScreenProp
             fontFamily: 'var(--mono)',
           }}
         >
-          Back to feed
+          Back to Home
         </button>
       </div>
     </div>
