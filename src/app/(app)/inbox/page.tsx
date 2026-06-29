@@ -270,7 +270,7 @@ export default function InboxPage() {
             maxWidth: 220,
             fontFamily: 'var(--mono)',
           }}>
-            Add photos to your Curato album to grow your library.
+            Use the + button to capture photos, voice notes, or observations.
           </p>
           <button
             onClick={startRecording}
