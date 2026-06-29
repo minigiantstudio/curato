@@ -15,9 +15,10 @@ interface DoneScreenProps {
   entry: SavedEntry
   onAgain: () => void
   onFeed: () => void
+  onCapsule: () => void
 }
 
-export function DoneScreen({ entry, onAgain, onFeed }: DoneScreenProps) {
+export function DoneScreen({ entry, onAgain, onFeed, onCapsule }: DoneScreenProps) {
   const typeInfo = CAPTURE_TYPES.find(t => t.id === entry.type)!
   const vc = entry.verdict === 'keep' ? 'var(--green)' : entry.verdict === 'reject' ? 'var(--red)' : 'var(--violet)'
   const now = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
@@ -98,7 +99,7 @@ export function DoneScreen({ entry, onAgain, onFeed }: DoneScreenProps) {
           onClick={onAgain}
           style={{
             width: '100%', padding: '14px',
-            background: 'var(--violet)', borderRadius: 10, border: 'none',
+            background: 'var(--violet)', borderRadius: 0, border: 'none',
             color: '#fff', fontSize: 12, letterSpacing: '0.04em', cursor: 'pointer',
             fontFamily: 'var(--mono)',
           }}
@@ -106,11 +107,23 @@ export function DoneScreen({ entry, onAgain, onFeed }: DoneScreenProps) {
           Capture another +
         </button>
         <button
-          onClick={onFeed}
+          onClick={onCapsule}
           style={{
             width: '100%', padding: '14px',
-            background: 'var(--cream-2)', border: '1.5px solid var(--line)',
-            borderRadius: 10, color: 'var(--ink-soft)', fontSize: 12,
+            background: 'var(--cream-2)', border: '1.5px solid var(--violet)',
+            borderRadius: 0, color: 'var(--violet)', fontSize: 12,
+            letterSpacing: '0.04em', cursor: 'pointer',
+            fontFamily: 'var(--mono)',
+          }}
+        >
+          See Capsule →
+        </button>
+        <button
+          onClick={onFeed}
+          style={{
+            width: '100%', padding: '10px',
+            background: 'none', border: 'none',
+            color: 'var(--ink-faint)', fontSize: 11,
             letterSpacing: '0.04em', cursor: 'pointer',
             fontFamily: 'var(--mono)',
           }}

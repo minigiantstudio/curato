@@ -171,6 +171,13 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
     router.push('/feed')
   }
 
+  function onCapsule() {
+    flowData.current = {}
+    setSavedEntry(null)
+    setStep('idle')
+    router.push('/capsule')
+  }
+
   // ── Render ────────────────────────────────────────────────────
   const type = flowData.current.type
 
@@ -225,6 +232,7 @@ export function CaptureProvider({ children }: { children: React.ReactNode }) {
               entry={savedEntry}
               onAgain={onAgain}
               onFeed={onFeed}
+              onCapsule={onCapsule}
             />
           )}
         </div>
