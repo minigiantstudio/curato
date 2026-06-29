@@ -127,8 +127,8 @@ export default function HomePage() {
             lineHeight: 1.12, letterSpacing: '-0.015em',
             color: 'var(--ink)', margin: 0,
           }}>
-            Feed your Design<br />
-            System{' '}
+            Sharpen your taste,<br />
+            capture{' '}
             <em style={{ color: 'var(--violet)', fontStyle: 'italic' }}>daily.</em>
           </h1>
         </div>
