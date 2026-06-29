@@ -12,7 +12,6 @@ function BottomNav() {
 
   const tabs = [
     { href: '/feed',     label: 'Home'    },
-    { href: '/inbox',    label: 'Inbox'   },
     { href: '/capsule',  label: 'Capsule' },
     { href: '/contexts', label: 'Brands'  },
   ]
