@@ -1,7 +1,7 @@
 {
-  "name": "Taste — Art Director Capture Tool",
-  "short_name": "Taste",
-  "description": "Capture and synthesize your design taste",
+  "name": "Curato",
+  "short_name": "Curato",
+  "description": "Capture and synthesize your visual design intelligence",
   "start_url": "/",
   "display": "fullscreen",
   "scope": "/",
